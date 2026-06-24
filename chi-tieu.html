@@ -1,1 +1,295 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#E0392C"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="FC Sunday"><title>Chi tiêu · FC Sunday</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/logo-1024.png"><link rel="stylesheet" href="style.css"></head><body><div class="app-shell"><main class="main"><div class="content-wrap"><div id="expenses"></div></div></main></div><script src="app.js"></script><script>document.addEventListener("DOMContentLoaded",()=>{FC.boot('chi-tieu','Chi tiêu');FC.renderExpenses();});</script></body></html>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0C0C0F">
+  <title>FC Sunday — Chi tiêu</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+</head>
+<body data-active="chi-tieu">
+<div class="app-shell">
+  <div data-component="sidebar"></div>
+  <div class="main-content">
+    <div data-component="header" data-title="Chi tiêu"></div>
+    <main class="page" id="page-content" style="opacity:0;transition:opacity .2s">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap">
+        <div>
+          <div class="section-overline">Quản lý</div>
+          <h1 class="text-h1">Chi tiêu</h1>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-ghost btn-icon" id="btn-year-prev"><iconify-icon icon="solar:arrow-left-linear" style="font-size:18px"></iconify-icon></button>
+          <div class="year-selector"><iconify-icon icon="solar:calendar-linear" style="font-size:14px"></iconify-icon><span id="year-text">2026</span></div>
+          <button class="btn btn-ghost btn-icon" id="btn-year-next"><iconify-icon icon="solar:arrow-right-linear" style="font-size:18px"></iconify-icon></button>
+        </div>
+      </div>
+
+      <!-- KPI -->
+      <div class="grid-3" style="margin-bottom:24px">
+        <div class="kpi-card kpi-card--red">
+          <div class="kpi-card__label">Tổng chi</div>
+          <div class="kpi-card__value" id="kpi-tong-chi">0 ₫</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Chi từ quỹ tháng</div>
+          <div class="kpi-card__value" id="kpi-chi-thang">0 ₫</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Chi từ quỹ bia</div>
+          <div class="kpi-card__value" id="kpi-chi-bia">0 ₫</div>
+        </div>
+      </div>
+
+      <!-- Layout: chart + form -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+        <!-- Donut chart -->
+        <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:16px">
+          <div style="width:100%">
+            <div class="section-overline" style="margin-bottom:4px">Thống kê</div>
+            <div class="section-title" style="font-size:16px">Phân bổ theo danh mục</div>
+          </div>
+          <div style="position:relative;width:200px;height:200px">
+            <canvas id="donut-chart"></canvas>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;flex-direction:column">
+              <div style="font-size:12px;color:var(--text-muted)">Tổng</div>
+              <div style="font-size:18px;font-weight:800;color:var(--text-primary)" id="chart-center-val">0</div>
+            </div>
+          </div>
+          <div id="chart-legend" class="chart-legend" style="width:100%"></div>
+        </div>
+
+        <!-- Add expense (admin) -->
+        <div class="card auth-only" id="add-chi-card" style="display:none">
+          <div class="section-overline" style="margin-bottom:4px">Thêm khoản</div>
+          <div class="section-title" style="font-size:16px;margin-bottom:16px">Ghi nhận chi tiêu</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="field">
+              <label>Ngày chi</label>
+              <input type="date" class="input" id="chi-date">
+            </div>
+            <div class="field">
+              <label>Số tiền <span style="color:var(--text-muted);font-weight:400">(âm = cộng lại)</span></label>
+              <input type="number" class="input" id="chi-amount" placeholder="VD: 500000">
+            </div>
+            <div class="field">
+              <label>Danh mục</label>
+              <select class="input" id="chi-cat">
+                <option value="Sân bóng">⚽ Sân bóng</option>
+                <option value="Thiết bị">🎽 Thiết bị</option>
+                <option value="Tiệc / Liên hoan">🎉 Tiệc / Liên hoan</option>
+                <option value="Y tế">🏥 Y tế</option>
+                <option value="Phần thưởng">🏆 Phần thưởng</option>
+                <option value="Khác">📦 Khác</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Nguồn quỹ</label>
+              <select class="input" id="chi-fund">
+                <option value="thang">Quỹ tháng</option>
+                <option value="bia">Quỹ bia</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Ghi chú</label>
+              <input type="text" class="input" id="chi-note" placeholder="Mô tả khoản chi">
+            </div>
+            <button class="btn btn-primary" id="btn-add-chi" style="justify-content:center">
+              <iconify-icon icon="solar:add-circle-linear" style="font-size:18px"></iconify-icon>
+              Thêm khoản chi
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- History table -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div class="section-overline" style="margin-bottom:4px">Lịch sử</div>
+            <div class="section-title" style="font-size:16px">Tất cả khoản chi</div>
+          </div>
+          <!-- Filter -->
+          <select class="input" id="filter-fund" style="width:auto;font-size:13px;padding:6px 12px">
+            <option value="">Tất cả quỹ</option>
+            <option value="thang">Quỹ tháng</option>
+            <option value="bia">Quỹ bia</option>
+          </select>
+        </div>
+        <div class="table-wrap" style="margin-top:12px">
+          <table class="fc-table">
+            <thead>
+              <tr>
+                <th>Ngày</th>
+                <th>Danh mục</th>
+                <th>Quỹ</th>
+                <th>Ghi chú</th>
+                <th style="text-align:right">Số tiền</th>
+                <th class="auth-only" id="th-actions" style="display:none"></th>
+              </tr>
+            </thead>
+            <tbody id="chi-tbody">
+              <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px">Đang tải…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+  <div data-component="bottom-nav"></div>
+</div>
+<div data-component="login-modal"></div>
+<script src="app.js" defer></script>
+<script src="components/components-loader.js" defer></script>
+<script>
+  const CATS = ['Sân bóng','Thiết bị','Tiệc / Liên hoan','Y tế','Phần thưởng','Khác'];
+  const CAT_COLORS = ['#E0392C','#FFC02E','#2ECC71','#FF6A5E','#F5891F','#9A9AA2'];
+  const BASE_YEAR = 2026;
+  let _year = BASE_YEAR, _S = null, _chart = null;
+
+  function fmt(n) { return new Intl.NumberFormat('vi-VN').format(Math.round(n||0)) + ' ₫'; }
+
+  function getChiTieu(S) {
+    return (S.chiTieu||[]).filter(c => {
+      const y = parseInt(c.date?.substring(0,4));
+      return y === _year;
+    });
+  }
+
+  function renderChart(chiTieu) {
+    const catTotals = {};
+    chiTieu.forEach(c => { if (c.amount > 0) catTotals[c.cat] = (catTotals[c.cat]||0) + c.amount; });
+    const labels = Object.keys(catTotals);
+    const data   = Object.values(catTotals);
+    const total  = data.reduce((s,v) => s+v, 0);
+
+    document.getElementById('chart-center-val').textContent =
+      total >= 1e6 ? (total/1e6).toFixed(1)+'M' : new Intl.NumberFormat('vi-VN').format(total);
+
+    const ctx = document.getElementById('donut-chart').getContext('2d');
+    if (_chart) _chart.destroy();
+    if (!total) {
+      document.getElementById('chart-legend').innerHTML = '<span style="color:var(--text-muted);font-size:13px">Chưa có dữ liệu</span>';
+      return;
+    }
+    _chart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: labels.map(l => CAT_COLORS[CATS.indexOf(l)] || '#5D5D66'), borderWidth: 0 }]
+      },
+      options: {
+        cutout: '70%',
+        plugins: { legend: { display: false }, tooltip: {
+          callbacks: { label: ctx => ` ${ctx.label}: ${fmt(ctx.raw)}` }
+        }}
+      }
+    });
+
+    document.getElementById('chart-legend').innerHTML = labels.map((l,i) => `
+      <div class="chart-legend-item">
+        <div class="chart-legend-dot" style="background:${CAT_COLORS[CATS.indexOf(l)]||'#5D5D66'}"></div>
+        ${l}: ${fmt(data[i])}
+      </div>`).join('');
+  }
+
+  function renderPage(S) {
+    _S = S;
+    const isAdmin = window._isLoggedIn?.();
+    let chiTieu = getChiTieu(S);
+    const filterFund = document.getElementById('filter-fund')?.value || '';
+    const filtered = filterFund ? chiTieu.filter(c => c.fund === filterFund) : chiTieu;
+
+    // KPI
+    const tong = chiTieu.reduce((s,c)=>s+(c.amount||0),0);
+    const chiThang = chiTieu.filter(c=>!c.fund||c.fund==='thang').reduce((s,c)=>s+(c.amount||0),0);
+    const chiBia   = chiTieu.filter(c=>c.fund==='bia').reduce((s,c)=>s+(c.amount||0),0);
+    document.getElementById('kpi-tong-chi').textContent  = fmt(tong);
+    document.getElementById('kpi-chi-thang').textContent = fmt(chiThang);
+    document.getElementById('kpi-chi-bia').textContent   = fmt(chiBia);
+
+    renderChart(chiTieu);
+
+    // Admin card
+    const addCard = document.getElementById('add-chi-card');
+    if (addCard) addCard.style.display = isAdmin ? 'flex' : 'none';
+    const thActions = document.getElementById('th-actions');
+    if (thActions) thActions.style.display = isAdmin ? '' : 'none';
+
+    // Table
+    const tbody = document.getElementById('chi-tbody');
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px">Chưa có khoản chi nào</td></tr>`;
+      return;
+    }
+    const sorted = [...filtered].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    tbody.innerHTML = sorted.map(c => {
+      const d = c.date ? new Date(c.date).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+      const amtColor = c.amount < 0 ? 'var(--color-success)' : 'var(--color-accent-light)';
+      const amtLabel = (c.amount < 0 ? '+' : '-') + fmt(Math.abs(c.amount));
+      const fundBadge = c.fund === 'bia'
+        ? '<span class="badge badge-warning">Quỹ bia</span>'
+        : '<span class="badge badge-neutral">Quỹ tháng</span>';
+      return `<tr>
+        <td style="color:var(--text-secondary)">${d}</td>
+        <td><span style="font-weight:600">${c.cat||'—'}</span></td>
+        <td>${fundBadge}</td>
+        <td style="color:var(--text-secondary);max-width:180px;overflow:hidden;text-overflow:ellipsis">${c.note||'—'}</td>
+        <td style="text-align:right;font-weight:700;color:${amtColor}">${amtLabel}</td>
+        ${isAdmin ? `<td><button class="btn btn-icon btn-ghost" onclick="deleteChiTieu(${c.id})" style="color:var(--text-muted)"><iconify-icon icon="solar:trash-bin-trash-linear" style="font-size:16px"></iconify-icon></button></td>` : '<td></td>'}
+      </tr>`;
+    }).join('');
+  }
+
+  window.deleteChiTieu = function(id) {
+    if (!window._isLoggedIn?.() || !_S) return;
+    if (!confirm('Xoá khoản chi này?')) return;
+    _S.chiTieu = (_S.chiTieu||[]).filter(c => c.id != id);
+    window._saveS?.(_S);
+    renderPage(_S);
+  };
+
+  function updateYearUI() { document.getElementById('year-text').textContent = _year; window._currentYear = _year; }
+
+  window.onComponentsReady = function() {
+    updateYearUI();
+    document.getElementById('btn-year-prev').addEventListener('click', () => { _year--; updateYearUI(); if(_S) renderPage(_S); });
+    document.getElementById('btn-year-next').addEventListener('click', () => { _year++; updateYearUI(); if(_S) renderPage(_S); });
+    document.getElementById('filter-fund')?.addEventListener('change', () => { if(_S) renderPage(_S); });
+
+    const dateEl = document.getElementById('chi-date');
+    if (dateEl) dateEl.value = new Date().toISOString().slice(0,10);
+
+    document.getElementById('btn-add-chi')?.addEventListener('click', () => {
+      if (!_S || !window._isLoggedIn?.()) return;
+      const date   = document.getElementById('chi-date').value;
+      const amount = parseFloat(document.getElementById('chi-amount').value);
+      const cat    = document.getElementById('chi-cat').value;
+      const fund   = document.getElementById('chi-fund').value;
+      const note   = document.getElementById('chi-note').value.trim();
+      if (!date || isNaN(amount)) { alert('Vui lòng điền đủ thông tin'); return; }
+      if (!_S.chiTieu) _S.chiTieu = [];
+      const newId = (_S.nextCid || 1);
+      _S.chiTieu.push({ id: newId, date, amount, cat, fund, note });
+      _S.nextCid = newId + 1;
+      window._saveS?.(_S);
+      document.getElementById('chi-amount').value = '';
+      document.getElementById('chi-note').value   = '';
+      renderPage(_S);
+    });
+
+    document.getElementById('page-content').style.opacity = '1';
+  };
+  window._onDataReady = function(S) { renderPage(S); };
+  window._onAuthChange = function() { if(_S) renderPage(_S); };
+</script>
+</body>
+</html>

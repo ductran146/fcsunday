@@ -1,1 +1,309 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#E0392C"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="FC Sunday"><title>Quỹ bia · FC Sunday</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/logo-1024.png"><link rel="stylesheet" href="style.css"></head><body><div class="app-shell"><main class="main"><div class="content-wrap"><div id="fines"></div></div></main></div><script src="app.js"></script><script>document.addEventListener("DOMContentLoaded",()=>{FC.boot('thu-phat','Quỹ bia');FC.renderFines();});</script></body></html>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0C0C0F">
+  <title>FC Sunday — Quỹ bia</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <style>
+    .month-tab {
+      padding: 8px 16px; border-radius: var(--radius-full);
+      font-size: 13px; font-weight: 600;
+      background: var(--bg-elevated); color: var(--text-secondary);
+      border: 1px solid var(--bg-border); cursor: pointer;
+      transition: background .12s, color .12s, border-color .12s;
+    }
+    .month-tab.active { background: rgba(255,192,46,.15); color: var(--color-primary); border-color: rgba(255,192,46,.3); }
+    .loser-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 10px; border-radius: var(--radius-full);
+      font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: background .12s;
+    }
+    .loser-paid   { background: rgba(46,204,113,.15); color: var(--color-success); border: 1px solid rgba(46,204,113,.3); }
+    .loser-unpaid { background: rgba(224,57,44,.1);  color: var(--color-accent-light); border: 1px solid rgba(224,57,44,.2); }
+  </style>
+</head>
+<body data-active="thu-phat">
+<div class="app-shell">
+  <div data-component="sidebar"></div>
+  <div class="main-content">
+    <div data-component="header" data-title="Quỹ bia"></div>
+    <main class="page" id="page-content" style="opacity:0;transition:opacity .2s">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap">
+        <div>
+          <div class="section-overline">50.000 ₫ / người / trận thua</div>
+          <h1 class="text-h1">Quỹ bia 🍺</h1>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-ghost btn-icon" id="btn-year-prev"><iconify-icon icon="solar:arrow-left-linear" style="font-size:18px"></iconify-icon></button>
+          <div class="year-selector"><iconify-icon icon="solar:calendar-linear" style="font-size:14px"></iconify-icon><span id="year-text">2026</span></div>
+          <button class="btn btn-ghost btn-icon" id="btn-year-next"><iconify-icon icon="solar:arrow-right-linear" style="font-size:18px"></iconify-icon></button>
+        </div>
+      </div>
+
+      <!-- KPI -->
+      <div class="grid-3" style="margin-bottom:24px">
+        <div class="kpi-card kpi-card--gold">
+          <div class="kpi-card__label">Tổng thu bia</div>
+          <div class="kpi-card__value" id="kpi-thu-bia">0 ₫</div>
+        </div>
+        <div class="kpi-card kpi-card--red">
+          <div class="kpi-card__label">Còn nợ</div>
+          <div class="kpi-card__value" id="kpi-con-no">0 ₫</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Số trận</div>
+          <div class="kpi-card__value" id="kpi-so-tran">0</div>
+        </div>
+      </div>
+
+      <!-- Leaderboard + add match -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+        <!-- Leaderboard -->
+        <div class="card">
+          <div class="section-overline" style="margin-bottom:4px">Xếp hạng</div>
+          <div class="section-title" style="font-size:16px;margin-bottom:16px">Top thua nhiều nhất</div>
+          <div class="leaderboard-list" id="bia-leaderboard">
+            <div style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px">Chưa có dữ liệu</div>
+          </div>
+        </div>
+
+        <!-- Add match (admin only) -->
+        <div class="card auth-only" id="add-match-card" style="display:none">
+          <div class="section-overline" style="margin-bottom:4px">Thêm trận</div>
+          <div class="section-title" style="font-size:16px;margin-bottom:16px">Ghi nhận trận đấu</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="field">
+              <label>Ngày thi đấu</label>
+              <input type="date" class="input" id="match-date">
+            </div>
+            <div class="field">
+              <label>Đội thua (chọn nhiều)</label>
+              <div id="loser-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px;max-height:160px;overflow-y:auto;padding:4px 0"></div>
+            </div>
+            <div class="field">
+              <label>Thu thêm (nếu có)</label>
+              <input type="number" class="input" id="match-thu-them" placeholder="0" min="0">
+            </div>
+            <div class="field">
+              <label>Ghi chú thu thêm</label>
+              <input type="text" class="input" id="match-ghi-chu" placeholder="VD: Thu bù trận cũ">
+            </div>
+            <button class="btn btn-primary" id="btn-add-match" style="justify-content:center">
+              <iconify-icon icon="solar:add-circle-linear" style="font-size:18px"></iconify-icon>
+              Thêm trận
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Month tabs -->
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px" id="month-tabs"></div>
+
+      <!-- Match list -->
+      <div id="match-list" style="display:flex;flex-direction:column;gap:12px">
+        <div style="text-align:center;color:var(--text-muted);padding:48px 0">
+          <iconify-icon icon="solar:cup-star-linear" style="font-size:48px;opacity:.3"></iconify-icon>
+          <div style="margin-top:12px">Chưa có trận nào trong tháng này</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+  <div data-component="bottom-nav"></div>
+</div>
+<div data-component="login-modal"></div>
+<script src="app.js" defer></script>
+<script src="components/components-loader.js" defer></script>
+<script>
+  const MONTHS = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+  const FINE = 50000, BASE_YEAR = 2026;
+  let _year = BASE_YEAR, _S = null, _activeMonth = new Date().getMonth();
+
+  function fmt(n) { return new Intl.NumberFormat('vi-VN').format(n) + ' ₫'; }
+
+  function getYearMatches(S) {
+    return (S.matches || []).filter(m => {
+      const yr = _year === BASE_YEAR ? (!m.year || m.year === BASE_YEAR) : m.year === _year;
+      return yr;
+    });
+  }
+
+  function renderLeaderboard(matches, members) {
+    const lossMap = {};
+    matches.forEach(match => {
+      (match.losers||[]).forEach(l => { lossMap[l.memberId] = (lossMap[l.memberId]||0) + 1; });
+    });
+    const ranking = Object.entries(lossMap)
+      .map(([id, n]) => ({ m: members.find(x => x.id == id), n }))
+      .filter(x => x.m).sort((a,b) => b.n-a.n).slice(0,5);
+
+    const el = document.getElementById('bia-leaderboard');
+    if (!ranking.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px">Chưa có dữ liệu</div>'; return; }
+    el.innerHTML = ranking.map((r,i) => `
+      <div class="leaderboard-item leaderboard-item--${i+1}" style="margin-bottom:8px">
+        <div class="leaderboard-item__rank">${i+1}</div>
+        <div class="leaderboard-item__name">${r.m.name}</div>
+        <div class="leaderboard-item__losses">${r.n} trận</div>
+        <div class="leaderboard-item__debt">${fmt(r.n*FINE)}</div>
+      </div>`).join('');
+  }
+
+  function renderMatches(matches, members) {
+    const monthMatches = matches.filter(m => m.monthIdx === _activeMonth);
+    const el = document.getElementById('match-list');
+    if (!monthMatches.length) {
+      el.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:48px 0">
+        <iconify-icon icon="solar:cup-star-linear" style="font-size:48px;opacity:.3"></iconify-icon>
+        <div style="margin-top:12px">Chưa có trận nào trong tháng này</div>
+      </div>`; return;
+    }
+    el.innerHTML = monthMatches.map(match => {
+      const losers = (match.losers||[]).map(l => {
+        const member = members.find(m => m.id == l.memberId);
+        const cls = l.paid ? 'loser-paid' : 'loser-unpaid';
+        const icon = l.paid ? 'solar:check-circle-linear' : 'solar:close-circle-linear';
+        return `<span class="loser-chip ${cls}" onclick="togglePaid(${match.id},${l.memberId})" title="${l.paid?'Đã nộp':'Chưa nộp'}">
+          <iconify-icon icon="${icon}" style="font-size:14px"></iconify-icon>
+          ${member?.name || 'Unknown'}
+        </span>`;
+      }).join('');
+
+      const dateFmt = match.date ? new Date(match.date).toLocaleDateString('vi-VN', {day:'2-digit',month:'2-digit'}) : '—';
+      const paidCount = (match.losers||[]).filter(l=>l.paid).length;
+      const total = paidCount * FINE + (match.thuThem||0);
+      const isAdmin = window._isLoggedIn?.();
+
+      return `<div class="match-card fade-in">
+        <div class="match-card__header">
+          <div>
+            <div style="font-weight:700">Trận ${dateFmt}</div>
+            <div class="match-card__date">${(match.losers||[]).length} người thua · Thu: ${fmt(total)}</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            ${match.thuThem ? `<span class="badge badge-warning">+${fmt(match.thuThem)}</span>` : ''}
+            ${isAdmin ? `<button class="btn btn-icon btn-ghost" onclick="deleteMatch(${match.id})" title="Xoá trận" style="color:var(--text-muted)">
+              <iconify-icon icon="solar:trash-bin-trash-linear" style="font-size:18px"></iconify-icon>
+            </button>` : ''}
+          </div>
+        </div>
+        <div class="match-card__body">
+          <div class="match-card__losers">${losers}</div>
+          ${match.ghiChuThem ? `<div style="margin-top:8px;font-size:12px;color:var(--text-muted)">${match.ghiChuThem}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderPage(S) {
+    _S = S;
+    const members = (S.members||[]).filter(m => m.status !== 'left');
+    const matches = getYearMatches(S);
+    const isAdmin = window._isLoggedIn?.();
+
+    // KPI
+    let thuBia = 0, noBia = 0;
+    matches.forEach(m => {
+      (m.losers||[]).forEach(l => { if(l.paid) thuBia += FINE; else noBia += FINE; });
+      thuBia += (m.thuThem||0);
+    });
+    document.getElementById('kpi-thu-bia').textContent = fmt(thuBia);
+    document.getElementById('kpi-con-no').textContent  = fmt(noBia);
+    document.getElementById('kpi-so-tran').textContent = matches.length;
+
+    renderLeaderboard(matches, members);
+
+    // Month tabs
+    const tabsEl = document.getElementById('month-tabs');
+    tabsEl.innerHTML = MONTHS.map((mn,i) => {
+      const cnt = matches.filter(m => m.monthIdx === i).length;
+      return `<button class="month-tab ${i===_activeMonth?'active':''}" onclick="setMonth(${i})">${mn}${cnt?' ('+cnt+')':''}</button>`;
+    }).join('');
+
+    renderMatches(matches, members);
+
+    // Add match card
+    const addCard = document.getElementById('add-match-card');
+    if (addCard) addCard.style.display = isAdmin ? 'flex' : 'none';
+
+    // Loser checkboxes
+    const checkboxEl = document.getElementById('loser-checkboxes');
+    if (checkboxEl) {
+      checkboxEl.innerHTML = members.map(m => `
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;cursor:pointer;padding:4px 10px;border-radius:var(--radius-full);border:1px solid var(--bg-stroke);background:var(--bg-elevated)">
+          <input type="checkbox" value="${m.id}" style="accent-color:var(--color-primary)"> ${m.name}
+        </label>`).join('');
+    }
+
+    // Set date default
+    const dateEl = document.getElementById('match-date');
+    if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
+  }
+
+  window.setMonth = function(mi) { _activeMonth = mi; if(_S) renderPage(_S); };
+
+  window.togglePaid = async function(matchId, memberId) {
+    if (!window._isLoggedIn?.() || !_S) return;
+    const match = (_S.matches||[]).find(m => m.id == matchId);
+    if (!match) return;
+    const loser = (match.losers||[]).find(l => l.memberId == memberId);
+    if (loser) { loser.paid = !loser.paid; }
+    window._saveS?.(_S);
+    renderPage(_S);
+  };
+
+  window.deleteMatch = async function(matchId) {
+    if (!window._isLoggedIn?.() || !_S) return;
+    if (!confirm('Xoá trận này?')) return;
+    _S.matches = (_S.matches||[]).filter(m => m.id != matchId);
+    window._saveS?.(_S);
+    renderPage(_S);
+  };
+
+  function updateYearUI() { document.getElementById('year-text').textContent = _year; window._currentYear = _year; }
+
+  window.onComponentsReady = function() {
+    updateYearUI();
+    document.getElementById('btn-year-prev').addEventListener('click', () => { _year--; updateYearUI(); if(_S) renderPage(_S); });
+    document.getElementById('btn-year-next').addEventListener('click', () => { _year++; updateYearUI(); if(_S) renderPage(_S); });
+
+    document.getElementById('btn-add-match')?.addEventListener('click', () => {
+      if (!_S || !window._isLoggedIn?.()) return;
+      const date = document.getElementById('match-date').value;
+      if (!date) { alert('Vui lòng chọn ngày'); return; }
+      const d = new Date(date);
+      const mi = d.getMonth();
+      const selectedLosers = Array.from(document.querySelectorAll('#loser-checkboxes input:checked'))
+        .map(cb => ({ memberId: parseInt(cb.value), paid: false }));
+      if (!selectedLosers.length) { alert('Chọn ít nhất 1 người thua'); return; }
+      const thuThem = parseInt(document.getElementById('match-thu-them').value) || 0;
+      const ghiChu = document.getElementById('match-ghi-chu').value.trim();
+      if (!_S.matches) _S.matches = [];
+      const newId = (_S.nextMaid || 1);
+      _S.matches.push({ id: newId, date, monthIdx: mi, losers: selectedLosers, thuThem, ghiChuThem: ghiChu, year: _year });
+      _S.nextMaid = newId + 1;
+      window._saveS?.(_S);
+      _activeMonth = mi;
+      // Reset form
+      document.getElementById('match-thu-them').value = '';
+      document.getElementById('match-ghi-chu').value = '';
+      document.querySelectorAll('#loser-checkboxes input').forEach(cb => cb.checked = false);
+      renderPage(_S);
+    });
+
+    document.getElementById('page-content').style.opacity = '1';
+  };
+  window._onDataReady = function(S) { renderPage(S); };
+  window._onAuthChange = function() { if(_S) renderPage(_S); };
+</script>
+</body>
+</html>

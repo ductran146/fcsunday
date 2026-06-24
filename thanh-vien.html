@@ -1,1 +1,276 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#E0392C"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="FC Sunday"><title>Thành viên · FC Sunday</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/logo-1024.png"><link rel="stylesheet" href="style.css"></head><body><div class="app-shell"><main class="main"><div class="content-wrap"><div id="members"></div></div></main></div><script src="app.js"></script><script>document.addEventListener("DOMContentLoaded",()=>{FC.boot('thanh-vien','Thành viên');FC.renderMembers();});</script></body></html>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0C0C0F">
+  <title>FC Sunday — Thành viên</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
+</head>
+<body data-active="thanh-vien">
+<div class="app-shell">
+  <div data-component="sidebar"></div>
+  <div class="main-content">
+    <div data-component="header" data-title="Thành viên"></div>
+    <main class="page" id="page-content" style="opacity:0;transition:opacity .2s">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap">
+        <div>
+          <div class="section-overline">Đội hình</div>
+          <h1 class="text-h1">Thành viên</h1>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="year-selector"><iconify-icon icon="solar:calendar-linear" style="font-size:14px"></iconify-icon><span id="year-text">2026</span></div>
+          <button class="btn btn-primary auth-only" id="btn-add-member" style="display:none">
+            <iconify-icon icon="solar:add-circle-linear" style="font-size:18px"></iconify-icon>
+            Thêm thành viên
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI -->
+      <div class="grid-3" style="margin-bottom:24px">
+        <div class="kpi-card">
+          <div class="kpi-card__label">Thành viên hoạt động</div>
+          <div class="kpi-card__value" id="kpi-active">0</div>
+        </div>
+        <div class="kpi-card kpi-card--red">
+          <div class="kpi-card__label">Tổng nợ tháng</div>
+          <div class="kpi-card__value" id="kpi-no-thang">0 ₫</div>
+        </div>
+        <div class="kpi-card kpi-card--red">
+          <div class="kpi-card__label">Tổng nợ bia</div>
+          <div class="kpi-card__value" id="kpi-no-bia">0 ₫</div>
+        </div>
+      </div>
+
+      <!-- Filter tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="month-tab active" id="tab-all"      onclick="setFilter('all')">Tất cả</button>
+        <button class="month-tab"        id="tab-active"   onclick="setFilter('active')">Đang hoạt động</button>
+        <button class="month-tab"        id="tab-inactive" onclick="setFilter('inactive')">Tạm nghỉ</button>
+        <button class="month-tab"        id="tab-left"     onclick="setFilter('left')">Đã nghỉ</button>
+      </div>
+      <style>
+        .month-tab { padding:7px 14px; border-radius:var(--radius-full); font-size:13px; font-weight:600; background:var(--bg-elevated); color:var(--text-secondary); border:1px solid var(--bg-border); cursor:pointer; transition:background .12s,color .12s,border-color .12s; }
+        .month-tab.active { background:rgba(255,192,46,.15); color:var(--color-primary); border-color:rgba(255,192,46,.3); }
+      </style>
+
+      <!-- Member list -->
+      <div id="member-list" style="display:flex;flex-direction:column;gap:8px"></div>
+
+    </main>
+  </div>
+  <div data-component="bottom-nav"></div>
+</div>
+
+<!-- Add member modal -->
+<div class="modal-backdrop" id="add-member-modal" style="display:none">
+  <div class="modal fade-in">
+    <div class="modal-handle"></div>
+    <h2 class="modal-title" id="member-modal-title">Thêm thành viên</h2>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="field">
+        <label>Họ tên</label>
+        <input type="text" class="input" id="member-name" placeholder="Nguyễn Văn A">
+      </div>
+      <div class="field">
+        <label>Số điện thoại</label>
+        <input type="tel" class="input" id="member-phone" placeholder="0901234567">
+      </div>
+      <div class="field">
+        <label>Trạng thái</label>
+        <select class="input" id="member-status">
+          <option value="active">Đang hoạt động</option>
+          <option value="inactive">Tạm nghỉ</option>
+          <option value="left">Đã nghỉ</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Ghi chú</label>
+        <input type="text" class="input" id="member-note" placeholder="">
+      </div>
+      <input type="hidden" id="member-edit-id">
+      <div style="display:flex;gap:12px;margin-top:4px">
+        <button class="btn btn-primary w-full" id="btn-save-member" style="justify-content:center">
+          <iconify-icon icon="solar:check-circle-linear" style="font-size:18px"></iconify-icon>
+          Lưu
+        </button>
+        <button class="btn btn-ghost" id="btn-cancel-member">Huỷ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div data-component="login-modal"></div>
+<script src="app.js" defer></script>
+<script src="components/components-loader.js" defer></script>
+<script>
+  const FEE = 200000, FINE = 50000, BASE_YEAR = 2026;
+  let _year = BASE_YEAR, _S = null, _filter = 'all';
+
+  function fmt(n) { return new Intl.NumberFormat('vi-VN').format(Math.round(n||0)) + ' ₫'; }
+
+  const STATUS_LABEL = { active:'Đang hoạt động', inactive:'Tạm nghỉ', left:'Đã nghỉ' };
+  const STATUS_BADGE = {
+    active:   '<span class="badge badge-success">Đang hoạt động</span>',
+    inactive: '<span class="badge badge-warning">Tạm nghỉ</span>',
+    left:     '<span class="badge badge-muted">Đã nghỉ</span>',
+  };
+
+  function calcDebt(S, member) {
+    const yearKey = _year === BASE_YEAR ? String(member.id) : `${member.id}_${_year}`;
+    const arr = S.thuThang?.[yearKey] || Array(12).fill(0);
+    const noThang = arr.filter(v => v === 0).length * FEE;
+
+    const matches = (S.matches||[]).filter(m => {
+      const yr = _year === BASE_YEAR ? (!m.year || m.year === BASE_YEAR) : m.year === _year;
+      return yr;
+    });
+    const noBia = matches.reduce((s, m) => {
+      const l = (m.losers||[]).find(l => l.memberId == member.id);
+      return s + (l && !l.paid ? FINE : 0);
+    }, 0);
+
+    const soTran = matches.filter(m => (m.losers||[]).some(l=>l.memberId==member.id)).length;
+
+    return { noThang, noBia, total: noThang + noBia, soTran };
+  }
+
+  function renderPage(S) {
+    _S = S;
+    const isAdmin = window._isLoggedIn?.();
+    const addBtn = document.getElementById('btn-add-member');
+    if (addBtn) addBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+
+    document.getElementById('year-text').textContent = _year;
+
+    const all = S.members || [];
+    const active = all.filter(m => m.status !== 'left');
+
+    // KPI
+    let noThangTotal = 0, noBiaTotal = 0;
+    active.forEach(m => {
+      const d = calcDebt(S, m);
+      noThangTotal += d.noThang;
+      noBiaTotal   += d.noBia;
+    });
+    document.getElementById('kpi-active').textContent   = all.filter(m=>m.status==='active').length;
+    document.getElementById('kpi-no-thang').textContent = fmt(noThangTotal);
+    document.getElementById('kpi-no-bia').textContent   = fmt(noBiaTotal);
+
+    // Filter
+    const show = _filter === 'all' ? all : all.filter(m => m.status === _filter);
+
+    const el = document.getElementById('member-list');
+    if (!show.length) {
+      el.innerHTML = `<div class="empty-state">
+        <div class="empty-state__icon"><iconify-icon icon="solar:users-group-rounded-linear" style="font-size:48px"></iconify-icon></div>
+        <div class="empty-state__title">Chưa có thành viên</div>
+      </div>`;
+      return;
+    }
+
+    el.innerHTML = show.map(m => {
+      const d = calcDebt(S, m);
+      const totalColor = d.total > 0 ? 'color:var(--color-accent-light)' : 'color:var(--color-success)';
+
+      return `<div class="member-row fade-in">
+        <div class="avatar">${m.name.charAt(0)}</div>
+        <div class="member-row__info">
+          <div class="member-row__name">${m.name}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
+            ${STATUS_BADGE[m.status] || ''}
+            <span style="font-size:11px;color:var(--text-muted)">${d.soTran} trận</span>
+          </div>
+        </div>
+        <div class="member-row__debt">
+          <div class="member-row__total" style="${totalColor}">${d.total > 0 ? fmt(d.total) : '✓ Sạch nợ'}</div>
+          ${d.noThang > 0 || d.noBia > 0 ? `
+          <div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;align-items:flex-end">
+            ${d.noThang ? `<div style="font-size:11px;color:var(--text-muted)">Tháng: <span style="color:var(--color-accent-light)">${fmt(d.noThang)}</span></div>` : ''}
+            ${d.noBia   ? `<div style="font-size:11px;color:var(--text-muted)">Bia: <span style="color:var(--color-accent-light)">${fmt(d.noBia)}</span></div>` : ''}
+          </div>` : ''}
+        </div>
+        ${isAdmin ? `<div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="btn btn-icon btn-ghost" onclick="editMember(${m.id})" title="Sửa">
+            <iconify-icon icon="solar:pen-2-linear" style="font-size:16px"></iconify-icon>
+          </button>
+        </div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  window.setFilter = function(f) {
+    _filter = f;
+    ['all','active','inactive','left'].forEach(x => {
+      document.getElementById('tab-'+x)?.classList.toggle('active', x === f);
+    });
+    if (_S) renderPage(_S);
+  };
+
+  window.editMember = function(id) {
+    if (!_S) return;
+    const m = (_S.members||[]).find(x => x.id == id);
+    if (!m) return;
+    document.getElementById('member-modal-title').textContent = 'Sửa thành viên';
+    document.getElementById('member-name').value   = m.name || '';
+    document.getElementById('member-phone').value  = m.phone || '';
+    document.getElementById('member-status').value = m.status || 'active';
+    document.getElementById('member-note').value   = m.note || '';
+    document.getElementById('member-edit-id').value = m.id;
+    document.getElementById('add-member-modal').style.display = 'flex';
+  };
+
+  function openAddMember() {
+    document.getElementById('member-modal-title').textContent = 'Thêm thành viên';
+    document.getElementById('member-name').value   = '';
+    document.getElementById('member-phone').value  = '';
+    document.getElementById('member-status').value = 'active';
+    document.getElementById('member-note').value   = '';
+    document.getElementById('member-edit-id').value = '';
+    document.getElementById('add-member-modal').style.display = 'flex';
+  }
+
+  window.onComponentsReady = function() {
+    document.getElementById('btn-add-member')?.addEventListener('click', openAddMember);
+    document.getElementById('btn-cancel-member')?.addEventListener('click', () => {
+      document.getElementById('add-member-modal').style.display = 'none';
+    });
+    document.getElementById('add-member-modal')?.addEventListener('click', (e) => {
+      if (e.target === document.getElementById('add-member-modal'))
+        document.getElementById('add-member-modal').style.display = 'none';
+    });
+    document.getElementById('btn-save-member')?.addEventListener('click', () => {
+      if (!_S || !window._isLoggedIn?.()) return;
+      const name   = document.getElementById('member-name').value.trim();
+      const phone  = document.getElementById('member-phone').value.trim();
+      const status = document.getElementById('member-status').value;
+      const note   = document.getElementById('member-note').value.trim();
+      const editId = document.getElementById('member-edit-id').value;
+      if (!name) { alert('Vui lòng nhập tên'); return; }
+      if (!_S.members) _S.members = [];
+      if (editId) {
+        const m = _S.members.find(x => x.id == editId);
+        if (m) { m.name = name; m.phone = phone; m.status = status; m.note = note; }
+      } else {
+        const newId = _S.nextMid || (_S.members.length + 1);
+        _S.members.push({ id: newId, name, phone, status, note });
+        _S.nextMid = newId + 1;
+      }
+      window._saveS?.(_S);
+      document.getElementById('add-member-modal').style.display = 'none';
+      renderPage(_S);
+    });
+    document.getElementById('page-content').style.opacity = '1';
+  };
+  window._onDataReady = function(S) { renderPage(S); };
+  window._onAuthChange = function() { if(_S) renderPage(_S); };
+</script>
+</body>
+</html>

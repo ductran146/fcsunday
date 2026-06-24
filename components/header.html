@@ -1,0 +1,42 @@
+<!-- ========================
+  FC Sunday V2 — Header Component
+  Usage: <div data-component="header" data-title="Tên trang"></div>
+======================== -->
+<div class="topbar">
+  <!-- Hamburger: chỉ hiện mobile -->
+  <button class="btn btn-icon btn-ghost show-mobile" id="menu-toggle" aria-label="Menu" style="display:none">
+    <iconify-icon icon="solar:hamburger-menu-linear" style="font-size:22px"></iconify-icon>
+  </button>
+
+  <!-- Title -->
+  <span class="topbar-title" id="topbar-title">FC Sunday</span>
+
+  <!-- Actions -->
+  <div class="topbar-actions">
+    <!-- Sync badge -->
+    <span class="sync-badge firebase" id="sync-badge">
+      <iconify-icon icon="solar:cloud-check-linear" style="font-size:13px"></iconify-icon>
+      <span id="sync-text">Đã đồng bộ</span>
+    </span>
+
+    <!-- Quick view (share) -->
+    <a href="share.html" target="_blank" class="btn btn-icon btn-ghost" title="Xem tổng quỹ nhanh" aria-label="Xem tổng quỹ nhanh">
+      <iconify-icon icon="solar:eye-linear" style="font-size:22px"></iconify-icon>
+    </a>
+
+    <!-- Refresh -->
+    <button class="btn btn-icon btn-ghost" id="btn-refresh" title="Làm mới dữ liệu" aria-label="Refresh">
+      <iconify-icon icon="solar:refresh-linear" style="font-size:22px"></iconify-icon>
+    </button>
+
+    <!-- Auth button -->
+    <button class="btn btn-icon btn-ghost" id="btn-auth" title="Đăng nhập" aria-label="Đăng nhập / Đăng xuất">
+      <iconify-icon icon="solar:lock-linear" style="font-size:22px" id="auth-icon"></iconify-icon>
+    </button>
+
+    <!-- More (admin only) -->
+    <button class="btn btn-icon btn-ghost auth-only" id="btn-more" title="Thêm" aria-label="Thêm tác vụ" style="display:none">
+      <iconify-icon icon="solar:menu-dots-linear" style="font-size:22px"></iconify-icon>
+    </button>
+  </div>
+</div>
