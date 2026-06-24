@@ -10,13 +10,13 @@
   // ── Firebase Config ────────────────────────────────────────
   // Replace with your actual config from Firebase Console
   const FIREBASE_CONFIG = {
-    apiKey:            "YOUR_API_KEY",
+    apiKey:            "AIzaSyBi2JPD56s_vrUkEj-BovpnFWlz9MBNwj8",
     authDomain:        "fc-sunday-8f932.firebaseapp.com",
     databaseURL:       "https://fc-sunday-8f932-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId:         "fc-sunday-8f932",
-    storageBucket:     "fc-sunday-8f932.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId:             "YOUR_APP_ID",
+    storageBucket:     "fc-sunday-8f932.firebasestorage.app",
+    messagingSenderId: "801708335980",
+    appId:             "1:801708335980:web:7d60e25e440d414c674949",
   };
 
   const CACHE_KEY = 'fc2026';

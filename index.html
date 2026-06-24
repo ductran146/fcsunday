@@ -33,24 +33,12 @@
     <!-- Page content -->
     <main class="page" id="page-content" style="opacity:0;transition:opacity .2s">
 
-      <!-- Year selector -->
+      <!-- Header row -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px">
-        <div>
-          <div class="section-overline">FC Sunday</div>
-          <h1 class="text-h1">Tổng quan</h1>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <button class="btn btn-ghost btn-icon" id="btn-year-prev" aria-label="Năm trước">
-            <iconify-icon icon="solar:arrow-left-linear" style="font-size:18px"></iconify-icon>
-          </button>
-          <div class="year-selector" id="year-display">
-            <iconify-icon icon="solar:calendar-linear" style="font-size:14px"></iconify-icon>
-            <span id="year-text">2026</span>
-          </div>
-          <button class="btn btn-ghost btn-icon" id="btn-year-next" aria-label="Năm sau">
-            <iconify-icon icon="solar:arrow-right-linear" style="font-size:18px"></iconify-icon>
-          </button>
-        </div>
+        <h1 class="text-h1">Tổng quan</h1>
+        <select class="year-selector" id="year-select">
+          <!-- options injected by JS -->
+        </select>
       </div>
 
       <!-- Hero Fund -->
@@ -98,37 +86,18 @@
         </div>
       </div>
 
-      <!-- 2 columns: Leaderboard + Debt list -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
-        <!-- Top quả tạ (thua nhiều nhất) -->
-        <div class="card">
-          <div class="section-header" style="margin-bottom:16px">
-            <div>
-              <div class="section-overline">Bảng xếp hạng</div>
-              <div class="section-title" style="font-size:16px">Top thua nhiều nhất 🏆</div>
-            </div>
-          </div>
-          <div class="leaderboard-list" id="leaderboard-list">
-            <div class="empty-state" style="padding:32px 0">
-              <div class="empty-state__icon"><iconify-icon icon="solar:cup-star-linear" style="font-size:36px"></iconify-icon></div>
-              <div class="empty-state__desc">Chưa có dữ liệu trận đấu</div>
-            </div>
+      <!-- Top quả tạ (thua nhiều nhất) -->
+      <div class="card" style="margin-bottom:24px">
+        <div class="section-header" style="margin-bottom:16px">
+          <div>
+            <div class="section-overline">Bảng xếp hạng</div>
+            <div class="section-title" style="font-size:16px">Top thua nhiều nhất 🏆</div>
           </div>
         </div>
-
-        <!-- Nợ quỹ bia -->
-        <div class="card">
-          <div class="section-header" style="margin-bottom:16px">
-            <div>
-              <div class="section-overline">Còn nợ</div>
-              <div class="section-title" style="font-size:16px">Nợ quỹ bia 🍺</div>
-            </div>
-          </div>
-          <div class="leaderboard-list" id="debt-list">
-            <div class="empty-state" style="padding:32px 0">
-              <div class="empty-state__icon"><iconify-icon icon="solar:hand-money-linear" style="font-size:36px"></iconify-icon></div>
-              <div class="empty-state__desc">Không có khoản nợ nào</div>
-            </div>
+        <div class="leaderboard-list" id="leaderboard-list">
+          <div class="empty-state" style="padding:32px 0">
+            <div class="empty-state__icon"><iconify-icon icon="solar:cup-star-linear" style="font-size:36px"></iconify-icon></div>
+            <div class="empty-state__desc">Chưa có dữ liệu trận đấu</div>
           </div>
         </div>
       </div>
@@ -279,33 +248,6 @@
         </div>`).join('');
     }
 
-    // Debt list (nợ bia chưa đóng)
-    const debtMap = {};
-    matches.forEach(match => {
-      (match.losers || []).filter(l => !l.paid).forEach(l => {
-        debtMap[l.memberId] = (debtMap[l.memberId] || 0) + FINE;
-      });
-    });
-    const debtList = document.getElementById('debt-list');
-    const debts = Object.entries(debtMap)
-      .map(([id, amt]) => ({ member: members.find(m => m.id == id), amt }))
-      .filter(x => x.member)
-      .sort((a,b) => b.amt - a.amt);
-
-    if (debts.length === 0) {
-      debtList.innerHTML = `<div class="empty-state" style="padding:32px 0">
-        <div class="empty-state__icon"><iconify-icon icon="solar:hand-money-linear" style="font-size:36px"></iconify-icon></div>
-        <div class="empty-state__desc">Không có khoản nợ nào</div>
-      </div>`;
-    } else {
-      debtList.innerHTML = debts.map(d => `
-        <div class="leaderboard-item">
-          <div class="avatar avatar-sm">${d.member.name.charAt(0)}</div>
-          <div class="leaderboard-item__name">${d.member.name}</div>
-          <div class="leaderboard-item__debt">${fmt(d.amt)}</div>
-        </div>`).join('');
-    }
-
     // Summary table
     document.getElementById('summary-year').textContent = _year;
     let runTon = 0;
@@ -353,7 +295,21 @@
   }
 
   function updateYearUI() {
-    document.getElementById('year-text').textContent = _year;
+    // Build select options: BASE_YEAR đến năm hiện tại + 1
+    const sel = document.getElementById('year-select');
+    if (sel) {
+      const curY = new Date().getFullYear();
+      const minY = BASE_YEAR;
+      const maxY = curY + 1;
+      sel.innerHTML = '';
+      for (let y = maxY; y >= minY; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        if (y === _year) opt.selected = true;
+        sel.appendChild(opt);
+      }
+    }
     document.getElementById('summary-year').textContent = _year;
     document.getElementById('kpi-year-label').textContent = _year;
     window._currentYear = _year;
@@ -361,13 +317,9 @@
 
   window.onComponentsReady = function () {
     updateYearUI();
-    document.getElementById('btn-year-prev').addEventListener('click', () => {
-      _year--; updateYearUI();
-      const S = window._getS?.();
-      if (S) renderOverview(S);
-    });
-    document.getElementById('btn-year-next').addEventListener('click', () => {
-      _year++; updateYearUI();
+    document.getElementById('year-select')?.addEventListener('change', (e) => {
+      _year = parseInt(e.target.value);
+      updateYearUI();
       const S = window._getS?.();
       if (S) renderOverview(S);
     });
