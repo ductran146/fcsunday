@@ -270,36 +270,13 @@
         <div class="empty-state__desc">Chưa có dữ liệu trận đấu</div>
       </div>`;
     } else {
-      const podiumSource = ranking.slice(0, 3).map((r, i) => ({ ...r, rank: i + 1 }));
-      const podiumOrder = [podiumSource[1], podiumSource[0], podiumSource[2]].filter(Boolean);
-      const others = ranking.slice(3);
-
-      lbList.innerHTML = `
-        <div class="leaderboard-podium">
-          ${podiumOrder.map((r) => `
-            <div class="leaderboard-podium-card leaderboard-podium-card--${r.rank}">
-              <div class="leaderboard-medal">
-                <iconify-icon class="leaderboard-medal__icon" icon="solar:medal-star-linear"></iconify-icon>
-                <span class="leaderboard-medal__rank">${r.rank}</span>
-              </div>
-              <div class="leaderboard-podium-card__name">${r.member.name}</div>
-              <div class="leaderboard-podium-card__losses">${r.n} trận</div>
-            </div>
-          `).join('')}
-        </div>
-        ${others.length ? `
-          <div class="leaderboard-more-list">
-            ${others.map((r, i) => `
-              <div class="leaderboard-more-item">
-                <div class="leaderboard-more-item__rank">${i + 4}</div>
-                <div class="leaderboard-more-item__name">${r.member.name}</div>
-                <div class="leaderboard-more-item__losses">${r.n} trận</div>
-                <div class="leaderboard-more-item__debt">${fmt(r.n * FINE)}</div>
-              </div>
-            `).join('')}
-          </div>
-        ` : ''}
-      `;
+      lbList.innerHTML = ranking.map((r, i) => `
+        <div class="leaderboard-item leaderboard-item--${i+1}">
+          <div class="leaderboard-item__rank">${i+1}</div>
+          <div class="leaderboard-item__name">${r.member.name}</div>
+          <div class="leaderboard-item__losses">${r.n} trận</div>
+          <div class="leaderboard-item__debt">${fmt(r.n * FINE)}</div>
+        </div>`).join('');
     }
 
     // Summary table
