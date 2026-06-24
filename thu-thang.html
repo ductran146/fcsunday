@@ -13,6 +13,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
   <style>
     .thu-thang-table td, .thu-thang-table th { min-width: 52px; text-align: center; }
+    .thu-thang-table th.month-col, .thu-thang-table td.month-col { width: 60px; min-width: 60px; max-width: 60px; }
+    .thu-thang-table th.stt-col, .thu-thang-table td.stt-col { width: 44px; min-width: 44px; max-width: 44px; text-align: center; }
     .thu-thang-table th.name-col, .thu-thang-table td.name-col { text-align: left; min-width: 120px; }
     .cell-btn {
       width: 40px; height: 32px;
@@ -26,7 +28,7 @@
     .cell-paid-btn    { background: rgba(46,204,113,.15); color: var(--color-success); }
     .cell-unpaid-btn  { background: rgba(224,57,44,.1);  color: var(--text-muted); }
     .cell-exempt-btn  { background: rgba(255,192,46,.1); color: var(--color-primary); font-style: italic; }
-    .cell-future-btn  { background: transparent; color: var(--text-disabled); cursor: default; pointer-events:none; }
+    .cell-future-btn  { opacity: .72; }
     .summary-row td   { background: var(--bg-elevated) !important; font-weight: 700; }
   </style>
 </head>
@@ -38,21 +40,19 @@
     <main class="page" id="page-content" style="opacity:0;transition:opacity .2s">
 
       <!-- Header row -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap">
-        <div>
+      <div class="thu-thang-page-header">
+        <div class="thu-thang-page-title">
           <div class="section-overline">Quỹ tháng</div>
           <h1 class="text-h1">Thu hàng tháng</h1>
-          <div style="font-size:13px;color:var(--text-secondary);margin-top:4px">200.000 ₫ / người / tháng</div>
+          <div class="thu-thang-page-subtitle">200.000 ₫ / người / tháng</div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <button class="btn btn-ghost btn-icon" id="btn-year-prev"><iconify-icon icon="solar:arrow-left-linear" style="font-size:18px"></iconify-icon></button>
-          <div class="year-selector"><iconify-icon icon="solar:calendar-linear" style="font-size:14px"></iconify-icon><span id="year-text">2026</span></div>
-          <button class="btn btn-ghost btn-icon" id="btn-year-next"><iconify-icon icon="solar:arrow-right-linear" style="font-size:18px"></iconify-icon></button>
-        </div>
+        <select class="year-selector thu-thang-year-selector" id="year-select">
+          <!-- options injected by JS -->
+        </select>
       </div>
 
       <!-- KPI quick -->
-      <div class="grid-3" style="margin-bottom:24px">
+      <div class="grid-2 thu-thang-kpi-grid" style="margin-bottom:24px">
         <div class="kpi-card kpi-card--gold">
           <div class="kpi-card__label">Đã thu</div>
           <div class="kpi-card__value" id="kpi-da-thu">0 ₫</div>
@@ -61,18 +61,21 @@
           <div class="kpi-card__label">Còn thiếu</div>
           <div class="kpi-card__value" id="kpi-con-thieu">0 ₫</div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-card__label">Tỉ lệ thu</div>
-          <div class="kpi-card__value" id="kpi-ti-le">0%</div>
-        </div>
       </div>
 
       <!-- Legend -->
       <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;font-size:12px">
-        <div style="display:flex;align-items:center;gap:6px"><span style="width:28px;height:20px;border-radius:4px;background:rgba(46,204,113,.15);display:inline-block;border:1px solid rgba(46,204,113,.3)"></span><span style="color:var(--text-secondary)">✓ Đã đóng</span></div>
-        <div style="display:flex;align-items:center;gap:6px"><span style="width:28px;height:20px;border-radius:4px;background:rgba(224,57,44,.1);display:inline-block;border:1px solid rgba(224,57,44,.2)"></span><span style="color:var(--text-secondary)">✗ Chưa đóng</span></div>
-        <div style="display:flex;align-items:center;gap:6px"><span style="width:28px;height:20px;border-radius:4px;background:rgba(255,192,46,.1);display:inline-block;border:1px solid rgba(255,192,46,.2)"></span><span style="color:var(--text-secondary)">— Miễn</span></div>
-        <span style="color:var(--text-muted)">· Click ô để thay đổi (cần đăng nhập)</span>
+        <div style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:4px;background:rgba(46,204,113,.15);display:inline-block;border:1px solid rgba(46,204,113,.3)"></span><span style="color:var(--text-secondary)">Đã đóng</span></div>
+        <div style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:4px;background:rgba(224,57,44,.1);display:inline-block;border:1px solid rgba(224,57,44,.2)"></span><span style="color:var(--text-secondary)">Chưa đóng</span></div>
+        <div style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:4px;background:rgba(255,192,46,.1);display:inline-block;border:1px solid rgba(255,192,46,.2)"></span><span style="color:var(--text-secondary)">Miễn</span></div>
+
+      <div class="thu-thang-save-bar" id="thu-thang-save-bar" hidden>
+        <button class="btn btn-surface thu-thang-action-btn" id="thu-thang-cancel-btn" type="button" onclick="cancelMonthlyChanges()">
+          Hủy
+        </button>
+        <button class="btn btn-gold thu-thang-action-btn" id="thu-thang-save-btn" type="button" onclick="saveMonthlyChanges()">
+          Lưu
+        </button>
       </div>
 
       <!-- Table -->
@@ -80,13 +83,14 @@
         <table class="fc-table thu-thang-table" id="thu-thang-table">
           <thead>
             <tr id="thu-thang-head">
+              <th class="sticky-col stt-col">STT</th>
               <th class="sticky-col name-col">Thành viên</th>
               <!-- months injected by JS -->
               <th>Tổng nợ</th>
             </tr>
           </thead>
           <tbody id="thu-thang-tbody">
-            <tr><td colspan="14" style="text-align:center;color:var(--text-muted);padding:32px">Đang tải…</td></tr>
+            <tr><td colspan="15" style="text-align:center;color:var(--text-muted);padding:32px">Đang tải…</td></tr>
           </tbody>
         </table>
       </div>
@@ -101,11 +105,12 @@
 <script>
   const MONTHS = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
   const FEE = 200000, BASE_YEAR = 2026;
-  let _year = BASE_YEAR, _S = null;
+  let _year = BASE_YEAR, _S = null, _lastSavedS = null, _hasMonthlyChanges = false;
   const curMonth = new Date().getMonth(); // 0-based
   const curYear  = new Date().getFullYear();
 
   function fmt(n) { return new Intl.NumberFormat('vi-VN').format(n) + ' ₫'; }
+  function cloneState(obj) { return JSON.parse(JSON.stringify(obj || {})); }
 
   function getKey(memberId) {
     return _year === BASE_YEAR ? String(memberId) : `${memberId}_${_year}`;
@@ -113,18 +118,21 @@
 
   function renderTable(S) {
     _S = S;
-    const members = (S.members || []).filter(m => m.status !== 'left');
+    const members = (S.members || [])
+      .filter(m => m.status !== 'left')
+      .slice()
+      .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi', { sensitivity: 'base' }));
     const isAdmin = window._isLoggedIn?.();
 
     // Build month headers
     const head = document.getElementById('thu-thang-head');
-    head.innerHTML = `<th class="sticky-col name-col">Thành viên</th>` +
-      MONTHS.map((m,i) => `<th>${m}</th>`).join('') +
+    head.innerHTML = `<th class="sticky-col stt-col">STT</th><th class="sticky-col name-col">Thành viên</th>` +
+      MONTHS.map((m,i) => `<th class="month-col">${m}</th>`).join('') +
       `<th>Tổng nợ</th>`;
 
     // Build rows
     let totalDaThu = 0, totalConNo = 0, totalObligated = 0;
-    const rows = members.map(m => {
+    const rows = members.map((m, index) => {
       const key = getKey(m.id);
       const arr = S.thuThang?.[key] || Array(12).fill(0);
       let memberDaThu = 0, memberNo = 0;
@@ -132,18 +140,29 @@
       const cells = arr.map((v, mi) => {
         const isFuture = _year > curYear || (_year === curYear && mi > curMonth);
         let cls = '', label = '', nextV = 0;
-        if (isFuture) { cls = 'cell-future-btn'; label = '·'; }
-        else if (v === 1) { cls = 'cell-paid-btn'; label = '✓'; memberDaThu += FEE; }
-        else if (v === 2) { cls = 'cell-exempt-btn'; label = '—'; }
-        else { cls = 'cell-unpaid-btn'; label = '✗'; memberNo += FEE; }
+        if (v === 1) {
+          cls = 'cell-paid-btn';
+          label = '✓';
+          memberDaThu += FEE;
+        } else if (v === 2) {
+          cls = 'cell-exempt-btn';
+          label = '—';
+        } else {
+          cls = 'cell-unpaid-btn';
+          label = '✗';
+          // Tháng tương lai vẫn cho chọn trước nhưng không tính vào còn thiếu
+          if (!isFuture) memberNo += FEE;
+        }
+        if (isFuture) cls += ' cell-future-btn';
 
         // Cycle: 0→1→2→0
         nextV = v === 0 ? 1 : v === 1 ? 2 : 0;
 
-        const clickAttr = isAdmin && !isFuture
+        const clickAttr = isAdmin
           ? `onclick="toggleCell(${m.id},${mi},${nextV})" style="cursor:pointer"`
           : '';
-        return `<td><button class="cell-btn ${cls}" ${clickAttr} title="${MONTHS[mi]}" data-mid="${m.id}" data-mi="${mi}">${label}</button></td>`;
+        const title = `${MONTHS[mi]}${isFuture ? ' · tháng tương lai' : ''}`;
+        return `<td class="month-col"><button class="cell-btn ${cls}" ${clickAttr} title="${title}" data-mid="${m.id}" data-mi="${mi}">${label}</button></td>`;
       }).join('');
 
       totalDaThu += memberDaThu;
@@ -152,10 +171,8 @@
 
       const noColor = memberNo > 0 ? 'color:var(--color-accent-light)' : 'color:var(--color-success)';
       return `<tr>
-        <td class="sticky-col" style="display:flex;align-items:center;gap:8px;min-width:130px">
-          <div class="avatar avatar-sm">${m.name.charAt(0)}</div>
-          <span style="font-weight:600">${m.name}</span>
-        </td>
+        <td class="sticky-col stt-col stt-cell">${index + 1}</td>
+        <td class="sticky-col name-col member-name-cell"><span>${m.name}</span></td>
         ${cells}
         <td style="${noColor};font-weight:700">${memberNo > 0 ? fmt(memberNo) : '✓'}</td>
       </tr>`;
@@ -169,49 +186,122 @@
         const arr = S.thuThang?.[key] || Array(12).fill(0);
         if (arr[mi] === 1) total += FEE;
       });
-      return `<td style="font-weight:700;color:var(--color-primary)">${total ? fmt(total) : '<span style="color:var(--text-muted)">—</span>'}</td>`;
+      return `<td class="month-col" style="font-weight:700;color:var(--color-primary)">${total ? fmt(total) : '<span style="color:var(--text-muted)">—</span>'}</td>`;
     }).join('');
 
     document.getElementById('thu-thang-tbody').innerHTML = rows +
       `<tr class="summary-row">
-        <td class="sticky-col" style="font-weight:800">Tổng thu</td>
+        <td class="sticky-col stt-col"></td>
+        <td class="sticky-col name-col" style="font-weight:800">Tổng thu</td>
         ${summaryArr}
         <td style="font-weight:800;color:var(--color-primary)">${fmt(totalDaThu)}</td>
       </tr>`;
 
     // KPI
-    const tiLe = (totalDaThu + totalConNo) > 0
-      ? Math.round(totalDaThu / (totalDaThu + totalConNo) * 100)
-      : 0;
     document.getElementById('kpi-da-thu').textContent    = fmt(totalDaThu);
     document.getElementById('kpi-con-thieu').textContent = fmt(totalConNo);
-    document.getElementById('kpi-ti-le').textContent     = tiLe + '%';
   }
 
-  window.toggleCell = async function(memberId, monthIdx, newVal) {
+  function setMonthlyPending(hasChanges) {
+    _hasMonthlyChanges = !!hasChanges;
+    const bar = document.getElementById('thu-thang-save-bar');
+    if (bar) bar.hidden = !_hasMonthlyChanges;
+  }
+
+  function showThuThangToast(message) {
+    const oldToast = document.querySelector('.thu-thang-toast');
+    if (oldToast) oldToast.remove();
+    const toast = document.createElement('div');
+    toast.className = 'thu-thang-toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+    setTimeout(() => {
+      toast.classList.remove('is-visible');
+      setTimeout(() => toast.remove(), 180);
+    }, 2200);
+  }
+
+  window.toggleCell = function(memberId, monthIdx, newVal) {
     if (!window._isLoggedIn?.()) return;
     const key = getKey(memberId);
     const arr = (_S.thuThang?.[key] || Array(12).fill(0)).slice();
     arr[monthIdx] = newVal;
     if (!_S.thuThang) _S.thuThang = {};
     _S.thuThang[key] = arr;
-    window._saveS?.(_S);
+    setMonthlyPending(true);
     renderTable(_S);
   };
 
+  window.cancelMonthlyChanges = function() {
+    if (!_hasMonthlyChanges || !_lastSavedS) return;
+    _S = cloneState(_lastSavedS);
+    setMonthlyPending(false);
+    renderTable(_S);
+  };
+
+  window.saveMonthlyChanges = async function() {
+    if (!_hasMonthlyChanges || !_S) return;
+    if (!window._isLoggedIn?.()) return;
+    const btn = document.getElementById('thu-thang-save-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.dataset.originalText = btn.innerHTML;
+      btn.innerHTML = 'Đang lưu';
+    }
+    try {
+      await window._saveS?.(_S);
+      _lastSavedS = cloneState(_S);
+      setMonthlyPending(false);
+      showThuThangToast('Đã cập nhật thu tháng');
+    } catch (err) {
+      console.error(err);
+      showThuThangToast('Không lưu được thay đổi');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = btn.dataset.originalText || 'Lưu';
+      }
+    }
+  };
+
   function updateYearUI() {
-    document.getElementById('year-text').textContent = _year;
+    const sel = document.getElementById('year-select');
+    if (sel) {
+      const curY = new Date().getFullYear();
+      const minY = BASE_YEAR;
+      const maxY = Math.max(curY + 1, BASE_YEAR);
+      sel.innerHTML = '';
+      for (let y = maxY; y >= minY; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        if (y === _year) opt.selected = true;
+        sel.appendChild(opt);
+      }
+    }
     window._currentYear = _year;
   }
 
   window.onComponentsReady = function () {
     updateYearUI();
-    document.getElementById('btn-year-prev').addEventListener('click', () => { _year--; updateYearUI(); if(_S) renderTable(_S); });
-    document.getElementById('btn-year-next').addEventListener('click', () => { _year++; updateYearUI(); if(_S) renderTable(_S); });
+    document.getElementById('year-select')?.addEventListener('change', (e) => {
+      _year = parseInt(e.target.value, 10) || BASE_YEAR;
+      updateYearUI();
+      if (_S) {
+        if (_hasMonthlyChanges && _lastSavedS) _S = cloneState(_lastSavedS);
+        setMonthlyPending(false);
+        renderTable(_S);
+      }
+    });
     document.getElementById('page-content').style.opacity = '1';
   };
 
-  window._onDataReady = function(S) { renderTable(S); };
+  window._onDataReady = function(S) {
+    _lastSavedS = cloneState(S);
+    setMonthlyPending(false);
+    renderTable(cloneState(S));
+  };
   window._onAuthChange = function() { if(_S) renderTable(_S); };
 </script>
 </body>
