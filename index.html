@@ -14,7 +14,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
   <style>
     /* Page-specific */
-    .summary-table-wrap { overflow-x: auto; border-radius: var(--radius-xl); border: 1px solid var(--bg-border); }
+    .summary-table-wrap { overflow-x: auto; border-top: 1px solid var(--bg-border); }
     .fc-table td.month-col { font-weight: 700; }
     .fc-table td.total-row { font-weight: 800; background: var(--bg-elevated) !important; }
   </style>
@@ -68,11 +68,16 @@
       </div>
 
       <!-- KPI Cards -->
-      <div class="grid-3" style="margin-bottom:24px">
+      <div class="grid-4 kpi-grid" style="margin-bottom:24px">
         <div class="kpi-card kpi-card--gold">
           <div class="kpi-card__label">Tổng thu</div>
           <div class="kpi-card__value" id="kpi-thu">0 ₫</div>
           <div class="kpi-card__sub">Thu tháng + quỹ bia</div>
+        </div>
+        <div class="kpi-card kpi-card--red">
+          <div class="kpi-card__label">Tiền sân gần nhất</div>
+          <div class="kpi-card__value" id="kpi-tien-san">0 ₫</div>
+          <div class="kpi-card__sub" id="kpi-tien-san-date">Chưa có khoản chi</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-card__label">Số trận đã đá</div>
@@ -80,9 +85,9 @@
           <div class="kpi-card__sub">Trong năm <span id="kpi-year-label">2026</span></div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-card__label">Thành viên hoạt động</div>
+          <div class="kpi-card__label">Đang hoạt động</div>
           <div class="kpi-card__value" id="kpi-thanh-vien">0</div>
-          <div class="kpi-card__sub">Đang active</div>
+          <div class="kpi-card__sub">Đang hoạt động</div>
         </div>
       </div>
 
@@ -150,6 +155,20 @@
   function fmtShort(n) {
     return new Intl.NumberFormat('vi-VN').format(Math.round(n || 0)) + ' ₫';
   }
+  function fmtDateVN(dateStr) {
+    if (!dateStr) return '';
+    const parts = String(dateStr).split('-');
+    if (parts.length !== 3) return dateStr;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  function normalizeVNText(str) {
+    return String(str || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D')
+      .toLowerCase();
+  }
 
   function renderOverview(S) {
     const members   = (S.members || []).filter(m => m.status !== 'left');
@@ -201,6 +220,17 @@
     const tonTotal = tonThang + tonBia;
     const thuTotal = thuThangTotal + thuBiaTotal;
 
+    // Tiền sân gần nhất: lấy từ chi tiêu quỹ bóng/quỹ tháng có nội dung liên quan đến sân bóng
+    const sanExpenses = chiTieu
+      .filter(c => {
+        const text = normalizeVNText([c.cat, c.note, c.title, c.desc].filter(Boolean).join(' '));
+        const isSanBong = text.includes('san') || text.includes('san bong') || text.includes('tien san') || text.includes('thanh toan tien san');
+        const isQuyBong = !c.fund || c.fund === 'thang' || c.fund === 'bong';
+        return isQuyBong && isSanBong && Number(c.amount || 0) > 0;
+      })
+      .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')) || Number(b.id || 0) - Number(a.id || 0));
+    const latestSanExpense = sanExpenses[0];
+
     // Hero
     document.getElementById('hero-total').innerHTML =
       new Intl.NumberFormat('vi-VN').format(Math.round(tonTotal || 0)) + ' <span>₫</span>';
@@ -215,6 +245,8 @@
 
     // KPI
     document.getElementById('kpi-thu').textContent          = fmtShort(thuTotal);
+    document.getElementById('kpi-tien-san').textContent     = latestSanExpense ? fmtShort(latestSanExpense.amount) : '0 ₫';
+    document.getElementById('kpi-tien-san-date').textContent = latestSanExpense ? `Ngày ${fmtDateVN(latestSanExpense.date)}` : 'Chưa có khoản chi';
     document.getElementById('kpi-tran').textContent         = matches.length;
     document.getElementById('kpi-thanh-vien').textContent   = activeM.length;
     document.getElementById('kpi-year-label').textContent   = _year;
