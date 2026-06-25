@@ -231,7 +231,7 @@
       const totalDebtClass = d.total > 0 ? 'is-debt' : 'is-clear';
 
       return `<div class="member-swipe-row fade-in">
-        ${isAdmin ? `<div class="member-swipe-actions">
+        <div class="member-swipe-actions">
           <button class="member-swipe-action member-swipe-action--edit" type="button" onclick="event.stopPropagation(); editMember(${m.id}); closeMemberSwipeRows();" title="Sửa thông tin" aria-label="Sửa thông tin">
             <iconify-icon icon="solar:pen-2-linear"></iconify-icon>
             <span class="member-swipe-action__text">Sửa thông tin</span>
@@ -240,7 +240,7 @@
             <iconify-icon icon="solar:wallet-money-linear"></iconify-icon>
             <span class="member-swipe-action__text">Thanh toán</span>
           </button>
-        </div>` : ''}
+        </div>
         <div class="member-row member-detail-card member-swipe-card">
           <div class="member-detail-card__top">
             <div class="member-row__name">${m.name}</div>
@@ -279,56 +279,113 @@
 
   function setupMemberSwipeActions() {
     const isMobile = window.matchMedia?.('(max-width: 767px)').matches;
+
     document.querySelectorAll('.member-swipe-row').forEach(row => {
       const card = row.querySelector('.member-swipe-card');
       const actions = row.querySelector('.member-swipe-actions');
-      if (!card || !actions || !isMobile) return;
+      if (!card || !actions) return;
 
-      let startX = 0, startY = 0, currentX = 0, lastX = 0, dragging = false, horizontalSwipe = false;
-      const maxSwipe = Math.max(112, actions.getBoundingClientRect().width || 112);
+      // Tablet/desktop hiển thị action trực tiếp, không cần gesture.
+      if (!isMobile) return;
 
+      const getMaxSwipe = () => Math.max(112, Math.ceil(actions.getBoundingClientRect().width || 112));
+      const clamp = (value, maxSwipe) => Math.max(-maxSwipe, Math.min(0, value));
+      const setX = (x) => { card.style.transform = `translate3d(${x}px, 0, 0)`; };
+      const resetInlineTransform = () => {
+        card.style.transition = '';
+        card.style.transform = '';
+      };
+      const openRow = () => {
+        closeMemberSwipeRows(row);
+        resetInlineTransform();
+        row.classList.add('is-open');
+      };
+      const closeRow = () => {
+        resetInlineTransform();
+        row.classList.remove('is-open');
+      };
+
+      let startX = 0;
+      let startY = 0;
+      let baseX = 0;
+      let lastX = 0;
+      let dragging = false;
+      let lockedAxis = null;
+      let pointerId = null;
+
+      const beginDrag = (clientX, clientY, id) => {
+        const maxSwipe = getMaxSwipe();
+        startX = clientX;
+        startY = clientY;
+        baseX = row.classList.contains('is-open') ? -maxSwipe : 0;
+        lastX = baseX;
+        dragging = true;
+        lockedAxis = null;
+        pointerId = id ?? null;
+        card.style.transition = 'none';
+      };
+
+      const moveDrag = (clientX, clientY, event) => {
+        if (!dragging) return;
+        const dx = clientX - startX;
+        const dy = clientY - startY;
+
+        if (!lockedAxis) {
+          if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+          lockedAxis = Math.abs(dx) > Math.abs(dy) * 1.15 ? 'x' : 'y';
+        }
+
+        if (lockedAxis !== 'x') return;
+
+        const maxSwipe = getMaxSwipe();
+        lastX = clamp(baseX + dx, maxSwipe);
+        setX(lastX);
+        event?.preventDefault?.();
+      };
+
+      const endDrag = () => {
+        if (!dragging) return;
+        const maxSwipe = getMaxSwipe();
+        const shouldOpen = lockedAxis === 'x' && lastX <= -maxSwipe * 0.35;
+        dragging = false;
+        lockedAxis = null;
+        pointerId = null;
+        shouldOpen ? openRow() : closeRow();
+      };
+
+      // Pointer Events: ổn định hơn trên mobile hiện đại.
+      if (window.PointerEvent) {
+        card.addEventListener('pointerdown', (e) => {
+          if (e.pointerType === 'mouse' || e.button !== 0) return;
+          beginDrag(e.clientX, e.clientY, e.pointerId);
+          try { card.setPointerCapture(e.pointerId); } catch (_) {}
+        });
+
+        card.addEventListener('pointermove', (e) => {
+          if (pointerId !== null && e.pointerId !== pointerId) return;
+          moveDrag(e.clientX, e.clientY, e);
+        });
+
+        card.addEventListener('pointerup', endDrag);
+        card.addEventListener('pointercancel', endDrag);
+        card.addEventListener('lostpointercapture', () => {
+          if (dragging) endDrag();
+        });
+      }
+
+      // Touch fallback cho iOS/Safari cũ và trường hợp PointerEvent không ổn định.
       card.addEventListener('touchstart', (e) => {
         if (e.touches.length !== 1) return;
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-        currentX = row.classList.contains('is-open') ? -maxSwipe : 0;
-        lastX = currentX;
-        dragging = true;
-        horizontalSwipe = false;
-        card.style.transition = 'none';
+        beginDrag(e.touches[0].clientX, e.touches[0].clientY, null);
       }, { passive: true });
 
       card.addEventListener('touchmove', (e) => {
-        if (!dragging || e.touches.length !== 1) return;
-        const dx = e.touches[0].clientX - startX;
-        const dy = e.touches[0].clientY - startY;
-        if (!horizontalSwipe) {
-          if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-          if (Math.abs(dy) > Math.abs(dx)) {
-            dragging = false;
-            card.style.transition = '';
-            card.style.transform = '';
-            return;
-          }
-          horizontalSwipe = true;
-        }
-        lastX = Math.max(-maxSwipe, Math.min(0, currentX + dx));
-        card.style.transform = `translateX(${lastX}px)`;
-        e.preventDefault();
+        if (e.touches.length !== 1) return;
+        moveDrag(e.touches[0].clientX, e.touches[0].clientY, e);
       }, { passive: false });
 
-      card.addEventListener('touchend', () => {
-        if (!dragging) return;
-        dragging = false;
-        card.style.transition = '';
-        card.style.transform = '';
-        if (lastX < -maxSwipe * 0.35) {
-          closeMemberSwipeRows(row);
-          row.classList.add('is-open');
-        } else {
-          row.classList.remove('is-open');
-        }
-      }, { passive: true });
+      card.addEventListener('touchend', endDrag, { passive: true });
+      card.addEventListener('touchcancel', endDrag, { passive: true });
     });
   }
 
@@ -345,6 +402,10 @@
   };
 
   window.editMember = function(id) {
+    if (!window._isLoggedIn?.()) {
+      alert('Vui lòng đăng nhập trước khi sửa thông tin');
+      return;
+    }
     if (!_S) return;
     const m = (_S.members||[]).find(x => x.id == id);
     if (!m) return;

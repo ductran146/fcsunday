@@ -2157,3 +2157,34 @@ body[data-active="thanh-vien"] .member-swipe-action:active {
     display: inline;
   }
 }
+
+/* ── Thành viên: robust mobile swipe gesture fix ── */
+@media (max-width: 767px) {
+  body[data-active="thanh-vien"] .member-swipe-row {
+    overflow: hidden;
+    touch-action: pan-y pinch-zoom;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  body[data-active="thanh-vien"] .member-swipe-card {
+    transform: translate3d(0, 0, 0);
+    touch-action: pan-y pinch-zoom;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  body[data-active="thanh-vien"] .member-swipe-row.is-open .member-swipe-card {
+    transform: translate3d(-112px, 0, 0);
+  }
+
+  body[data-active="thanh-vien"] .member-detail-card__meta-row {
+    touch-action: pan-y pinch-zoom;
+    overscroll-behavior-x: contain;
+  }
+
+  body[data-active="thanh-vien"] .member-swipe-actions {
+    width: 112px;
+    pointer-events: auto;
+  }
+}
