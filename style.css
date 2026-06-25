@@ -590,7 +590,7 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
   }
 }
 
-.modal-handle { width: 40px; height: 4px; background: var(--bg-stroke); border-radius: 2px; margin: 0 auto var(--space-5); }
+.modal-handle { display: none !important; }
 .modal-title { font-size: 18px; font-weight: 700; margin-bottom: var(--space-5); }
 
 /* ── Toast / Status Badge ── */
