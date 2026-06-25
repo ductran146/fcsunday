@@ -9,32 +9,30 @@
   <!-- Title -->
   <span class="topbar-title" id="topbar-title">FC Sunday</span>
 
+  <!-- Spacer -->
+  <div style="flex:1"></div>
+
   <!-- Actions -->
   <div class="topbar-actions">
-    <!-- Sync badge -->
-    <span class="sync-badge firebase" id="sync-badge">
-      <iconify-icon icon="solar:cloud-check-linear" style="font-size:13px"></iconify-icon>
-      <span id="sync-text">Đã đồng bộ</span>
-    </span>
 
-    <!-- Quick view (share) -->
+    <!-- Quick view (share) — luôn hiện -->
     <a href="share.html" target="_blank" class="btn btn-icon btn-ghost" title="Xem tổng quỹ nhanh" aria-label="Xem tổng quỹ nhanh">
       <iconify-icon icon="solar:eye-linear" style="font-size:22px"></iconify-icon>
     </a>
 
-    <!-- Refresh -->
-    <button class="btn btn-icon btn-ghost" id="btn-refresh" title="Làm mới dữ liệu" aria-label="Refresh">
-      <iconify-icon icon="solar:refresh-linear" style="font-size:22px"></iconify-icon>
+    <!-- Chưa login: Login button -->
+    <button class="btn btn-outline btn-sm" id="btn-login" style="display:inline-flex;gap:6px;align-items:center">
+      <iconify-icon icon="solar:login-2-linear" style="font-size:16px"></iconify-icon>
+      Đăng nhập
     </button>
 
-    <!-- Auth button -->
-    <button class="btn btn-icon btn-ghost" id="btn-auth" title="Đăng nhập" aria-label="Đăng nhập / Đăng xuất">
-      <iconify-icon icon="solar:lock-linear" style="font-size:22px" id="auth-icon"></iconify-icon>
+    <!-- Đã login: Setting icon -->
+    <button class="btn btn-icon btn-ghost auth-only" id="btn-setting" title="Cài đặt" style="display:none">
+      <iconify-icon icon="solar:settings-linear" style="font-size:22px"></iconify-icon>
     </button>
 
-    <!-- More (admin only) -->
-    <button class="btn btn-icon btn-ghost auth-only" id="btn-more" title="Thêm" aria-label="Thêm tác vụ" style="display:none">
-      <iconify-icon icon="solar:menu-dots-linear" style="font-size:22px"></iconify-icon>
-    </button>
+    <!-- Đã login: Avatar chữ Đ (bấm → logout) -->
+    <button class="topbar-avatar auth-only" id="btn-avatar" title="Đăng xuất" style="display:none">Đ</button>
+
   </div>
 </div>

@@ -40,7 +40,7 @@
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap">
         <div>
-          <div class="section-overline">50.000 ₫ / người / trận thua</div>
+          <div class="section-overline">50.000 / người / trận thua</div>
           <h1 class="text-h1">Quỹ bia 🍺</h1>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -54,11 +54,11 @@
       <div class="grid-3" style="margin-bottom:24px">
         <div class="kpi-card kpi-card--gold">
           <div class="kpi-card__label">Tổng thu bia</div>
-          <div class="kpi-card__value" id="kpi-thu-bia">0 ₫</div>
+          <div class="kpi-card__value" id="kpi-thu-bia">0</div>
         </div>
         <div class="kpi-card kpi-card--red">
           <div class="kpi-card__label">Còn nợ</div>
-          <div class="kpi-card__value" id="kpi-con-no">0 ₫</div>
+          <div class="kpi-card__value" id="kpi-con-no">0</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-card__label">Số trận</div>
@@ -129,7 +129,7 @@
   const FINE = 50000, BASE_YEAR = 2026;
   let _year = BASE_YEAR, _S = null, _activeMonth = new Date().getMonth();
 
-  function fmt(n) { return new Intl.NumberFormat('vi-VN').format(n) + ' ₫'; }
+  function fmt(n) { return new Intl.NumberFormat('vi-VN').format(n) + ''; }
 
   function getYearMatches(S) {
     return (S.matches || []).filter(m => {

@@ -23,18 +23,18 @@
     <!-- Total fund hero -->
     <div class="hero-fund" style="margin-bottom:16px;text-align:center">
       <div class="hero-fund__label" style="text-align:center">Tổng quỹ hiện tại</div>
-      <div class="hero-fund__total" style="text-align:center;font-size:40px" id="share-total">0 <span>₫</span></div>
+      <div class="hero-fund__total" style="text-align:center;font-size:40px" id="share-total">0</div>
     </div>
 
     <!-- Split -->
     <div class="fund-split" style="margin-bottom:16px">
       <div class="fund-split__item">
         <div class="fund-split__item-label">Quỹ tháng</div>
-        <div class="fund-split__item-value" id="share-thang" style="color:var(--color-primary)">0 ₫</div>
+        <div class="fund-split__item-value" id="share-thang" style="color:var(--color-primary)">0</div>
       </div>
       <div class="fund-split__item">
         <div class="fund-split__item-label">Quỹ bia</div>
-        <div class="fund-split__item-value" id="share-bia" style="color:var(--color-primary)">0 ₫</div>
+        <div class="fund-split__item-value" id="share-bia" style="color:var(--color-primary)">0</div>
       </div>
     </div>
 
@@ -43,11 +43,11 @@
       <div class="section-overline" style="margin-bottom:8px">Tổng nợ chưa thu</div>
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span style="color:var(--text-secondary);font-size:14px">Nợ quỹ bia</span>
-        <span style="font-weight:700;color:var(--color-accent-light)" id="share-no-bia">0 ₫</span>
+        <span style="font-weight:700;color:var(--color-accent-light)" id="share-no-bia">0</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
         <span style="color:var(--text-secondary);font-size:14px">Nợ quỹ tháng</span>
-        <span style="font-weight:700;color:var(--color-accent-light)" id="share-no-thang">0 ₫</span>
+        <span style="font-weight:700;color:var(--color-accent-light)" id="share-no-thang">0</span>
       </div>
     </div>
 
@@ -65,8 +65,8 @@
   const YEAR = BASE_YEAR;
 
   function fmt(n) {
-    if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1).replace('.0','') + 'M ₫';
-    return new Intl.NumberFormat('vi-VN').format(Math.round(n||0)) + ' ₫';
+    if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1).replace('.0','') + 'M';
+    return new Intl.NumberFormat('vi-VN').format(Math.round(n||0)) + '';
   }
 
   function render(S) {
@@ -97,7 +97,7 @@
     const tonThang = thuThang - chiThang;
     const tonBia   = thuBia - chiBia;
 
-    document.getElementById('share-total').innerHTML = fmt(tonThang+tonBia).replace(' ₫','') + ' <span>₫</span>';
+    document.getElementById('share-total').innerHTML = fmt(tonThang+tonBia);
     document.getElementById('share-thang').textContent = fmt(tonThang);
     document.getElementById('share-bia').textContent   = fmt(tonBia);
     document.getElementById('share-no-thang').textContent = fmt(noThang);

@@ -36,15 +36,15 @@
       <div class="grid-3" style="margin-bottom:24px">
         <div class="kpi-card kpi-card--red">
           <div class="kpi-card__label">Tổng chi</div>
-          <div class="kpi-card__value" id="kpi-tong-chi">0 ₫</div>
+          <div class="kpi-card__value" id="kpi-tong-chi">0</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-card__label">Chi từ quỹ tháng</div>
-          <div class="kpi-card__value" id="kpi-chi-thang">0 ₫</div>
+          <div class="kpi-card__value" id="kpi-chi-thang">0</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-card__label">Chi từ quỹ bia</div>
-          <div class="kpi-card__value" id="kpi-chi-bia">0 ₫</div>
+          <div class="kpi-card__value" id="kpi-chi-bia">0</div>
         </div>
       </div>
 
@@ -155,7 +155,7 @@
   const BASE_YEAR = 2026;
   let _year = BASE_YEAR, _S = null, _chart = null;
 
-  function fmt(n) { return new Intl.NumberFormat('vi-VN').format(Math.round(n||0)) + ' ₫'; }
+  function fmt(n) { return new Intl.NumberFormat('vi-VN').format(Math.round(n||0)) + ''; }
 
   function getChiTieu(S) {
     return (S.chiTieu||[]).filter(c => {

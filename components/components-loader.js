@@ -92,13 +92,19 @@
 
   // ── Update auth UI ─────────────────────────────────────────
   window.updateAuthUI = function (isLoggedIn) {
-    const icon    = document.getElementById('auth-icon');
-    const moreBtn = document.getElementById('btn-more');
-    const authEls = document.querySelectorAll('.auth-only');
+    const btnLogin   = document.getElementById('btn-login');
+    const btnSetting = document.getElementById('btn-setting');
+    const btnAvatar  = document.getElementById('btn-avatar');
+    const authEls    = document.querySelectorAll('.auth-only');
 
-    if (icon) icon.setAttribute('icon', isLoggedIn ? 'solar:lock-unlocked-linear' : 'solar:lock-linear');
-    if (moreBtn) moreBtn.style.display = isLoggedIn ? 'inline-flex' : 'none';
-    authEls.forEach(el => { el.style.display = isLoggedIn ? '' : 'none'; });
+    if (btnLogin)   btnLogin.style.display   = isLoggedIn ? 'none' : 'inline-flex';
+    if (btnSetting) btnSetting.style.display = isLoggedIn ? 'inline-flex' : 'none';
+    if (btnAvatar)  btnAvatar.style.display  = isLoggedIn ? 'inline-flex' : 'none';
+    authEls.forEach(el => {
+      if (el.id !== 'btn-setting' && el.id !== 'btn-avatar') {
+        el.style.display = isLoggedIn ? '' : 'none';
+      }
+    });
   };
 
   // ── Install prompt (Android) ───────────────────────────────
@@ -127,31 +133,29 @@
 
   // ── Login modal logic ──────────────────────────────────────
   function initLoginModal() {
-    const modal    = document.getElementById('login-modal');
-    const btnAuth  = document.getElementById('btn-auth');
+    const modal     = document.getElementById('login-modal');
+    const btnLogin  = document.getElementById('btn-login');
+    const btnAvatar = document.getElementById('btn-avatar');
     const btnCancel = document.getElementById('btn-login-cancel');
     const btnSubmit = document.getElementById('btn-login-submit');
     const errBox    = document.getElementById('login-error');
     const errMsg    = document.getElementById('login-error-msg');
 
-    if (!modal || !btnAuth) return;
+    if (!modal) return;
 
     function openModal() {
-      // If logged in: logout
-      if (window._isLoggedIn?.()) {
-        window._logout?.();
-        return;
-      }
       modal.style.display = 'flex';
       document.getElementById('login-email')?.focus();
       if (errBox) errBox.style.display = 'none';
     }
-
     function closeModal() { modal.style.display = 'none'; }
 
-    btnAuth.addEventListener('click', openModal);
+    btnLogin?.addEventListener('click', openModal);
     btnCancel?.addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    // Avatar → logout
+    btnAvatar?.addEventListener('click', () => { window._logout?.(); });
 
     btnSubmit?.addEventListener('click', async () => {
       const email = document.getElementById('login-email')?.value?.trim();
@@ -234,7 +238,6 @@
     updateSidebarYear();
     showIOSHint();
     initLoginModal();
-    initRefreshBtn();
     initInstallBtn();
 
     // Hide install section in PWA mode

@@ -620,6 +620,8 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 .fund-split__item-rows  { margin-top: var(--space-1); display: flex; flex-direction: column; gap: 2px; }
 .fund-split__row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); }
 .fund-split__row span:last-child { font-weight: 600; color: var(--text-primary); }
+.fund-split__row[onclick] { border-radius: var(--radius-sm); padding: 2px 4px; margin: 0 -4px; transition: background .12s; }
+.fund-split__row[onclick]:hover { background: var(--bg-stroke); }
 
 
 .hero-fund__top {
@@ -664,6 +666,46 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
     padding-right: 28px;
   }
 }
+
+/* ── Podium leaderboard ── */
+.podium-wrap {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+}
+.podium-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-border);
+  text-align: center;
+  transition: border-color .15s;
+}
+.podium-medal { font-size: 32px; line-height: 1; }
+.podium-name  { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.podium-losses { font-size: 12px; color: var(--text-secondary); }
+
+/* Hạng 1 — nổi bật nhất, cao hơn */
+.podium-card--1 {
+  background: radial-gradient(ellipse at 50% 0%, rgba(255,192,46,.12) 0%, transparent 70%), var(--bg-elevated);
+  border-color: rgba(255,192,46,.35);
+  padding-top: var(--space-6);
+}
+.podium-card--1 .podium-name  { color: var(--color-primary); font-size: 14px; }
+.podium-card--1 .podium-medal { font-size: 40px; }
+
+/* Hạng 2 */
+.podium-card--2 { border-color: rgba(192,192,192,.25); }
+
+/* Hạng 3 */
+.podium-card--3 { border-color: rgba(205,127,50,.25); }
 
 /* ── Leaderboard ── */
 .leaderboard-list { display: flex; flex-direction: column; gap: var(--space-2); }
@@ -834,6 +876,22 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 @media (display-mode: standalone) {
   .topbar-logo { display: block; }
 }
+
+/* Avatar chữ Đ */
+.topbar-avatar {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-end));
+  color: #1a1206;
+  font-size: 14px; font-weight: 800;
+  border: none; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: opacity .15s, transform .1s;
+  font-family: var(--font-sans);
+}
+.topbar-avatar:hover  { opacity: .85; }
+.topbar-avatar:active { transform: scale(.93); }
 .topbar-actions { display: flex; align-items: center; gap: var(--space-2); }
 
 /* ── Year selector ── */
