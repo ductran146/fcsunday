@@ -7,6 +7,65 @@
   <title>FC Sunday — Chi tiêu</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Chi tiêu card ── */
+    .chi-swipe-row {
+      position: relative; width: 100%; overflow: hidden;
+      border-radius: var(--radius-lg);
+    }
+    .chi-swipe-card {
+      position: relative; z-index: 2; width: 100%;
+      will-change: transform; transition: transform .18s ease;
+      background: var(--bg-elevated);
+      border: 1px solid var(--bg-border);
+      border-radius: var(--radius-lg);
+      padding: 10px 14px;
+    }
+    .chi-swipe-card:hover { border-color: var(--bg-stroke); }
+    .chi-card-row1 {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 5px;
+    }
+    .chi-card-row2 {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-left: 34px; /* indent past STT */
+      gap: 8px;
+    }
+    .chi-card__stt {
+      width: 24px; height: 24px; border-radius: var(--radius-full);
+      background: var(--bg-stroke); color: var(--text-muted);
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .chi-card__info { flex: 1; min-width: 0; }
+    .chi-card__cat { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+    .chi-card__date { font-size: 12px; color: var(--text-secondary); }
+    .chi-card__note { font-size: 12px; color: var(--text-secondary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chi-card__amount { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+    /* Swipe action (delete) */
+    .chi-swipe-actions {
+      position: absolute; inset: 0 0 0 auto; z-index: 1;
+      display: flex; align-items: stretch; width: 72px;
+    }
+    .chi-swipe-del {
+      width: 100%; display: flex; align-items: center; justify-content: center;
+      background: var(--color-accent); color: #fff;
+      border: none; cursor: pointer; border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+      font-size: 20px;
+    }
+    @media (max-width: 767px) {
+      .chi-swipe-row { touch-action: pan-y pinch-zoom; user-select: none; -webkit-user-select: none; }
+      .chi-swipe-card { touch-action: pan-y pinch-zoom; }
+      .chi-swipe-row.is-open .chi-swipe-card { transform: translate3d(-72px,0,0); }
+    }
+    @media (min-width: 768px) {
+      .chi-swipe-row { overflow: visible; }
+      .chi-swipe-actions { display: none; }
+      .chi-del-desktop { display: inline-flex !important; }
+    }
+  </style>
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
@@ -80,29 +139,13 @@
               <div class="section-overline" style="margin-bottom:4px">Lịch sử</div>
               <div class="section-title" style="font-size:16px">Tất cả khoản chi</div>
             </div>
-            <select class="input" id="filter-fund" style="width:auto;font-size:13px;padding:6px 12px">
+            <select class="input input-h40" id="filter-fund" style="width:auto;padding-right:36px;min-width:120px">
               <option value="">Tất cả quỹ</option>
               <option value="thang">Quỹ tháng</option>
               <option value="bia">Quỹ bia</option>
             </select>
           </div>
-          <div class="table-wrap" style="margin-top:12px">
-            <table class="fc-table">
-              <thead>
-                <tr>
-                  <th>Ngày</th>
-                  <th>Danh mục</th>
-                  <th>Quỹ</th>
-                  <th>Ghi chú</th>
-                  <th style="text-align:right">Số tiền</th>
-                  <th class="auth-only" id="th-actions" style="display:none"></th>
-                </tr>
-              </thead>
-              <tbody id="chi-tbody">
-                <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px">Đang tải…</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <div id="chi-list" style="display:flex;flex-direction:column;gap:8px;padding:12px 20px 20px"></div>
         </div>
       </div><!-- /panel-history -->
 
@@ -248,37 +291,82 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
     const thActions = document.getElementById('th-actions');
     if (thActions) thActions.style.display = isAdmin ? '' : 'none';
 
-    // Table
-    const tbody = document.getElementById('chi-tbody');
+    // Card list
+    const list = document.getElementById('chi-list');
     if (!filtered.length) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px">Chưa có khoản chi nào</td></tr>`;
+      list.innerHTML = `<div class="empty-state" style="padding:32px 0">
+        <div class="empty-state__icon"><iconify-icon icon="solar:bill-list-linear" style="font-size:40px"></iconify-icon></div>
+        <div class="empty-state__desc">Chưa có khoản chi nào</div>
+      </div>`;
       return;
     }
     const sorted = [...filtered].sort((a,b) => (b.date||'').localeCompare(a.date||''));
-    tbody.innerHTML = sorted.map(c => {
-      const d = c.date ? new Date(c.date).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+    list.innerHTML = sorted.map((c, i) => {
+      const d = c.date ? (() => { const [y,m,dd]=c.date.split('-'); return `${dd}/${m}/${y}`; })() : '—';
       const amtColor = c.amount < 0 ? 'var(--color-success)' : 'var(--color-accent-light)';
       const amtLabel = (c.amount < 0 ? '+' : '-') + fmt(Math.abs(c.amount));
       const fundBadge = c.fund === 'bia'
         ? '<span class="badge badge-warning">Quỹ bia</span>'
         : '<span class="badge badge-neutral">Quỹ tháng</span>';
-      return `<tr>
-        <td style="color:var(--text-secondary)">${d}</td>
-        <td><span style="font-weight:600">${c.cat||'—'}</span></td>
-        <td>${fundBadge}</td>
-        <td style="color:var(--text-secondary);max-width:180px;overflow:hidden;text-overflow:ellipsis">${c.note||'—'}</td>
-        <td style="text-align:right;font-weight:700;color:${amtColor}">${amtLabel}</td>
-        ${isAdmin ? `<td><button class="btn btn-icon btn-ghost" onclick="deleteChiTieu(${c.id})" style="color:var(--text-muted)"><iconify-icon icon="solar:trash-bin-trash-linear" style="font-size:16px"></iconify-icon></button></td>` : '<td></td>'}
-      </tr>`;
+      return `<div class="chi-swipe-row" data-cid="${c.id}">
+        <div class="chi-swipe-actions">
+          <button class="chi-swipe-del" onclick="deleteChiTieu(${c.id})" title="Xoá">
+            <iconify-icon icon="solar:trash-bin-trash-linear"></iconify-icon>
+          </button>
+        </div>
+        <div class="chi-swipe-card">
+          <!-- Row 1: STT · Hạng mục + ngày ··· badge quỹ -->
+          <div class="chi-card-row1">
+            <div class="chi-card__stt">${sorted.length - i}</div>
+            <div class="chi-card__info">
+              <div class="chi-card__cat">${c.cat||'—'}</div>
+              <div class="chi-card__date">${d}</div>
+            </div>
+            ${fundBadge}
+            ${isAdmin ? `<button class="btn btn-icon btn-ghost" onclick="deleteChiTieu(${c.id})" style="color:var(--text-muted);width:30px;height:30px;display:none" class="chi-del-desktop">
+              <iconify-icon icon="solar:trash-bin-trash-linear" style="font-size:15px"></iconify-icon>
+            </button>` : ''}
+          </div>
+          <!-- Row 2: nội dung · số tiền -->
+          <div class="chi-card-row2">
+            <div class="chi-card__note">${c.note||'—'}</div>
+            <div class="chi-card__amount" style="color:${amtColor}">${amtLabel}</div>
+          </div>
+        </div>
+      </div>`;
     }).join('');
+    requestAnimationFrame(setupChiSwipe);
   }
 
   window.deleteChiTieu = function(id) {
     if (!window._isLoggedIn?.() || !_S) return;
-    if (!confirm('Xoá khoản chi này?')) return;
-    _S.chiTieu = (_S.chiTieu||[]).filter(c => c.id != id);
-    window._saveS?.(_S);
-    renderPage(_S);
+    const c = (_S.chiTieu||[]).find(x=>x.id==id);
+    const label = c?.cat || `#${id}`;
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.innerHTML = `<div class="modal fade-in" style="max-width:360px;text-align:center">
+      <div style="width:52px;height:52px;border-radius:var(--radius-full);background:rgba(224,57,44,.12);border:1.5px solid rgba(224,57,44,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:22px">
+        <iconify-icon icon="solar:trash-bin-trash-linear" style="color:var(--color-accent-light)"></iconify-icon>
+      </div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:8px">Xoá khoản chi?</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:20px"><strong style="color:var(--text-primary)">${label}</strong> sẽ bị xoá vĩnh viễn.</div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-surface w-full" id="_chi_del_cancel" style="justify-content:center">Huỷ</button>
+        <button class="btn w-full" id="_chi_del_ok" style="justify-content:center;background:var(--color-accent);color:#fff">
+          <iconify-icon icon="solar:trash-bin-trash-linear" style="font-size:16px"></iconify-icon>Xoá
+        </button>
+      </div>
+    </div>`;
+    document.body.appendChild(backdrop);
+    const close = () => backdrop.remove();
+    backdrop.addEventListener('click', e => { if(e.target===backdrop) close(); });
+    document.getElementById('_chi_del_cancel').addEventListener('click', close);
+    document.getElementById('_chi_del_ok').addEventListener('click', () => {
+      _S.chiTieu = (_S.chiTieu||[]).filter(x=>x.id!=id);
+      window._saveS?.(_S);
+      close();
+      renderPage(_S);
+    });
   };
 
   function updateYearUI() {
@@ -342,6 +430,46 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
 
     document.getElementById('page-content').style.opacity = '1';
   };
+  function setupChiSwipe() {
+    const isMobile = window.matchMedia?.('(max-width:767px)').matches;
+    if (!isMobile) return;
+    document.querySelectorAll('.chi-swipe-row').forEach(row => {
+      const card = row.querySelector('.chi-swipe-card');
+      if (!card) return;
+      const SWIPE_W = 72;
+      let startX=0, startY=0, baseX=0, dragging=false;
+      const clamp = v => Math.max(-SWIPE_W, Math.min(0, v));
+      const setX = x => card.style.transform = `translate3d(${x}px,0,0)`;
+      const openRow  = () => { row.classList.add('is-open');    setX(-SWIPE_W); };
+      const closeRow = () => { row.classList.remove('is-open'); card.style.transform=''; };
+
+      card.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        baseX  = row.classList.contains('is-open') ? -SWIPE_W : 0;
+        dragging = false;
+        card.style.transition = 'none';
+      }, {passive:true});
+
+      card.addEventListener('touchmove', e => {
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        if (!dragging && Math.abs(dy) > Math.abs(dx)) return;
+        dragging = true;
+        setX(clamp(baseX + dx));
+      }, {passive:true});
+
+      card.addEventListener('touchend', e => {
+        card.style.transition = '';
+        if (!dragging) { if (row.classList.contains('is-open')) closeRow(); return; }
+        const dx = e.changedTouches[0].clientX - startX;
+        if (baseX === 0 && dx < -30) openRow();
+        else if (baseX === -SWIPE_W && dx > 20) closeRow();
+        else baseX === -SWIPE_W ? openRow() : closeRow();
+      });
+    });
+  }
+
   window._onDataReady = function(S) { renderPage(S); };
   window._onAuthChange = function() { if(_S) renderPage(_S); };
 </script>
