@@ -2312,3 +2312,69 @@ body[data-active="thanh-vien"] .member-swipe-action:active {
     padding: var(--space-5);
   }
 }
+
+/* ── Thành viên: sort filters between search and list ── */
+body[data-active="thanh-vien"] .member-sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 0 0 var(--space-4);
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+body[data-active="thanh-vien"] .member-sort-bar::-webkit-scrollbar {
+  display: none;
+}
+
+body[data-active="thanh-vien"] .member-sort-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 0;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: color .12s, opacity .12s;
+}
+
+body[data-active="thanh-vien"] .member-sort-chip iconify-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+body[data-active="thanh-vien"] .member-sort-chip.active {
+  background: transparent;
+  color: var(--color-primary);
+}
+
+body[data-active="thanh-vien"] .member-sort-chip:active {
+  transform: scale(.98);
+}
+
+@media (max-width: 767px) {
+  body[data-active="thanh-vien"] .member-sort-bar {
+    margin-left: calc(var(--space-4) * -1);
+    margin-right: calc(var(--space-4) * -1);
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  body[data-active="thanh-vien"] .member-sort-chip {
+    min-height: 36px;
+    padding: 8px 0;
+    font-size: 12px;
+  }
+}

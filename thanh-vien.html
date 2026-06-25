@@ -70,6 +70,26 @@
         </button>
       </div>
 
+      <!-- Sort filters -->
+      <div class="member-sort-bar" aria-label="Sắp xếp danh sách thành viên">
+        <button class="member-sort-chip" type="button" data-sort-key="soTran" onclick="setMemberSort('soTran')">
+          <span>Trận thua</span>
+          <iconify-icon icon="solar:sort-vertical-linear" aria-hidden="true"></iconify-icon>
+        </button>
+        <button class="member-sort-chip" type="button" data-sort-key="noThang" onclick="setMemberSort('noThang')">
+          <span>Nợ quỹ tháng</span>
+          <iconify-icon icon="solar:sort-vertical-linear" aria-hidden="true"></iconify-icon>
+        </button>
+        <button class="member-sort-chip" type="button" data-sort-key="noBia" onclick="setMemberSort('noBia')">
+          <span>Nợ quỹ bia</span>
+          <iconify-icon icon="solar:sort-vertical-linear" aria-hidden="true"></iconify-icon>
+        </button>
+        <button class="member-sort-chip" type="button" data-sort-key="total" onclick="setMemberSort('total')">
+          <span>Tổng nợ</span>
+          <iconify-icon icon="solar:sort-vertical-linear" aria-hidden="true"></iconify-icon>
+        </button>
+      </div>
+
       <!-- Member list -->
       <div id="member-list" style="display:flex;flex-direction:column;gap:8px"></div>
 
@@ -121,7 +141,7 @@
 <script src="components/components-loader.js" defer></script>
 <script>
   const FEE = 200000, FINE = 50000, BASE_YEAR = 2026;
-  let _year = BASE_YEAR, _S = null, _filter = 'all', _query = '';
+  let _year = BASE_YEAR, _S = null, _filter = 'all', _query = '', _sortKey = 'name', _sortDir = 'asc';
 
   function fmt(n) { return new Intl.NumberFormat('vi-VN').format(Math.round(n||0)); }
   function fmtK(n) {
@@ -142,6 +162,37 @@
       .replace(/Đ/g, 'D')
       .toLowerCase()
       .trim();
+  }
+
+  const viCollator = new Intl.Collator('vi', { sensitivity: 'base', numeric: true });
+
+  function updateSortButtons() {
+    document.querySelectorAll('.member-sort-chip').forEach(btn => {
+      const key = btn.dataset.sortKey;
+      const active = key === _sortKey && _sortKey !== 'name';
+      btn.classList.toggle('active', active);
+      btn.classList.toggle('sort-asc', active && _sortDir === 'asc');
+      btn.classList.toggle('sort-desc', active && _sortDir === 'desc');
+      const icon = btn.querySelector('iconify-icon');
+      if (icon) {
+        icon.setAttribute('icon', active
+          ? (_sortDir === 'asc' ? 'solar:arrow-up-linear' : 'solar:arrow-down-linear')
+          : 'solar:sort-vertical-linear');
+      }
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
+  function compareMembers(a, b, debtCache) {
+    const nameCompare = viCollator.compare(a.name || '', b.name || '');
+    if (_sortKey === 'name') return nameCompare;
+
+    const da = debtCache.get(a.id) || { soTran: 0, noThang: 0, noBia: 0, total: 0 };
+    const db = debtCache.get(b.id) || { soTran: 0, noThang: 0, noBia: 0, total: 0 };
+    const av = Number(da[_sortKey] || 0);
+    const bv = Number(db[_sortKey] || 0);
+    const valueCompare = _sortDir === 'asc' ? av - bv : bv - av;
+    return valueCompare || nameCompare;
   }
 
   const STATUS_LABEL = { active:'Đang hoạt động', inactive:'Tạm nghỉ', left:'Đã nghỉ' };
@@ -208,12 +259,16 @@
     document.getElementById('kpi-no-thang').textContent  = fmt(noThangTotal);
     document.getElementById('kpi-no-bia').textContent    = fmt(noBiaTotal);
 
-    // Filter + search
+    // Filter + search + sort
     const normalizedQuery = normalizeText(_query);
     const byStatus = _filter === 'all' ? all : all.filter(m => m.status === _filter);
-    const show = normalizedQuery
+    const searched = normalizedQuery
       ? byStatus.filter(m => normalizeText(m.name).includes(normalizedQuery))
       : byStatus;
+    const debtCache = new Map();
+    searched.forEach(m => debtCache.set(m.id, calcDebt(S, m)));
+    const show = searched.slice().sort((a, b) => compareMembers(a, b, debtCache));
+    updateSortButtons();
 
     const el = document.getElementById('member-list');
     if (!show.length) {
@@ -225,7 +280,7 @@
     }
 
     el.innerHTML = show.map(m => {
-      const d = calcDebt(S, m);
+      const d = debtCache.get(m.id) || calcDebt(S, m);
       const monthDebtClass = d.noThang > 0 ? 'is-debt' : 'is-clear';
       const beerDebtClass = d.noBia > 0 ? 'is-debt' : 'is-clear';
       const totalDebtClass = d.total > 0 ? 'is-debt' : 'is-clear';
@@ -425,6 +480,24 @@
   document.addEventListener('click', (e) => {
     if (!e.target.closest?.('.member-swipe-row')) closeMemberSwipeRows();
   });
+
+  window.setMemberSort = function(key) {
+    if (!['soTran', 'noThang', 'noBia', 'total'].includes(key)) return;
+
+    // Cycle per filter: giảm dần → tăng dần → bỏ lọc, quay về tên A-Z.
+    if (_sortKey !== key) {
+      _sortKey = key;
+      _sortDir = 'desc';
+    } else if (_sortDir === 'desc') {
+      _sortDir = 'asc';
+    } else {
+      _sortKey = 'name';
+      _sortDir = 'asc';
+    }
+
+    if (_S) renderPage(_S);
+    else updateSortButtons();
+  };
 
   window.setFilter = function(f) {
     _filter = f;
