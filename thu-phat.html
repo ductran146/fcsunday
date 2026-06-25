@@ -153,6 +153,12 @@
 
       <!-- Monthly accordion -->
       <div id="month-accordion" style="display:flex;flex-direction:column;gap:12px"></div>
+
+      <!-- Save bar (pending changes) -->
+      <div class="thu-thang-save-bar" id="bia-save-bar" hidden>
+        <button class="btn btn-surface thu-thang-action-btn" type="button" onclick="cancelBiaChanges()">Huỷ</button>
+        <button class="btn btn-gold thu-thang-action-btn" id="bia-save-btn" type="button" onclick="saveBiaChanges()">Lưu</button>
+      </div>
     </main>
   </div>
   <div data-component="bottom-nav"></div>
@@ -171,7 +177,13 @@
     <div style="display:flex;flex-direction:column;gap:14px">
       <div class="field">
         <label>Ngày thi đấu</label>
-        <input type="date" class="input" id="match-date">
+        <button type="button" class="input" id="match-date-btn"
+          style="text-align:left;cursor:pointer;display:flex;align-items:center;gap:8px"
+          onclick="DatePicker.open('match-date','match-date-display')">
+          <iconify-icon icon="solar:calendar-linear" style="font-size:18px;color:var(--text-muted);flex-shrink:0"></iconify-icon>
+          <span id="match-date-display" style="color:var(--text-primary)">Chọn ngày</span>
+        </button>
+        <input type="hidden" id="match-date">
       </div>
       <div class="field">
         <label>Đội thua (chọn nhiều)</label>
@@ -198,6 +210,7 @@
 
 <!-- Match modal backdrop click close -->
 <script>document.getElementById('match-modal')?.addEventListener('click',e=>{if(e.target===document.getElementById('match-modal'))closeMatchModal();});</script>
+<script src="components/date-picker.js" defer></script>
 <script src="app.js" defer></script>
 <script src="components/components-loader.js" defer></script>
 <script>
@@ -247,6 +260,7 @@
       const match=(_S?.matches||[]).find(m=>m.id==_editMatchId);
       if(match) {
         document.getElementById('match-date').value=match.date||'';
+        DatePicker.setValue('match-date','match-date-display', match.date||'');
         document.getElementById('match-thu-them').value=match.thuThem||'';
         document.getElementById('match-ghi-chu').value=match.ghiChuThem||'';
         (match.losers||[]).forEach(l=>{
@@ -257,7 +271,8 @@
     } else {
       const today=new Date(),y=_year,mo=targetMi;
       const def=new Date(y,mo,mo===today.getMonth()&&y===today.getFullYear()?today.getDate():1);
-      document.getElementById('match-date').value=def.toISOString().slice(0,10);
+      const defStr = def.toISOString().slice(0,10);
+      DatePicker.setValue('match-date','match-date-display', defStr);
       document.getElementById('match-thu-them').value='';
       document.getElementById('match-ghi-chu').value='';
     }
@@ -266,6 +281,48 @@
   window.openAddMatch  = function(mi)      { openMatchModal(mi, null); };
   window.openEditMatch = function(matchId) {
     const m=(_S?.matches||[]).find(m=>m.id==matchId); if(m) openMatchModal(m.monthIdx, matchId);
+  };
+
+  // ── Pending state ────────────────────────────────────────
+  let _lastSavedS = null;
+  let _hasBiaChanges = false;
+
+  function setBiaPending(has) {
+    _hasBiaChanges = !!has;
+    const bar = document.getElementById('bia-save-bar');
+    if (bar) bar.hidden = !_hasBiaChanges;
+  }
+
+  window.togglePaid = function(matchId, memberId) {
+    if (!window._isLoggedIn?.() || !_S) return;
+    const match = (_S.matches||[]).find(m=>m.id==matchId);
+    if (!match) return;
+    const loser = (match.losers||[]).find(l=>l.memberId==memberId);
+    if (loser) loser.paid = !loser.paid;
+    setBiaPending(true);
+    renderPage(_S);
+  };
+
+  window.cancelBiaChanges = function() {
+    if (!_lastSavedS) return;
+    _S = JSON.parse(JSON.stringify(_lastSavedS));
+    setBiaPending(false);
+    renderPage(_S);
+  };
+
+  window.saveBiaChanges = async function() {
+    if (!_hasBiaChanges || !_S) return;
+    const btn = document.getElementById('bia-save-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Đang lưu…'; }
+    try {
+      await window._saveS?.(_S);
+      _lastSavedS = JSON.parse(JSON.stringify(_S));
+      setBiaPending(false);
+    } catch(e) {
+      console.error(e);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Lưu'; }
+    }
   };
 
   document.getElementById('btn-save-match')?.addEventListener('click', async ()=>{
@@ -295,6 +352,8 @@
     }
     _openMonths.add(mi);
     await window._saveS?.(_S);
+    _lastSavedS = JSON.parse(JSON.stringify(_S));
+    setBiaPending(false);
     closeMatchModal(); renderPage(_S);
   });
 
@@ -424,13 +483,6 @@
     renderAccordion(S);
   }
 
-  window.togglePaid=async function(matchId,memberId){
-    if(!window._isLoggedIn?.()||!_S) return;
-    const match=(_S.matches||[]).find(m=>m.id==matchId); if(!match) return;
-    const loser=(match.losers||[]).find(l=>l.memberId==memberId);
-    if(loser) loser.paid=!loser.paid;
-    await window._saveS?.(_S); renderPage(_S);
-  };
 
   window.deleteMatch = function(matchId) {
     if(!window._isLoggedIn?.()||!_S) return;
@@ -496,7 +548,10 @@
     });
     document.getElementById('page-content').style.opacity='1';
   };
-  window._onDataReady=function(S){renderPage(S);};
+  window._onDataReady=function(S){
+    _lastSavedS = JSON.parse(JSON.stringify(S));
+    renderPage(S);
+  };
   window._onAuthChange=function(){if(_S)renderPage(_S);};
 </script>
 </body>

@@ -116,7 +116,7 @@
               <label>Ngày chi</label>
               <button type="button" class="input" id="chi-date-btn"
                 style="text-align:left;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--text-primary)"
-                onclick="openDatePicker()">
+                onclick="window.DatePicker?.open('chi-date-value','chi-date-display')">
                 <iconify-icon icon="solar:calendar-linear" style="font-size:18px;color:var(--text-muted);flex-shrink:0"></iconify-icon>
                 <span id="chi-date-display">Chọn ngày</span>
               </button>
@@ -158,33 +158,11 @@
   </div>
   <div data-component="bottom-nav"></div>
 </div>
-<!-- Calendar Date Picker -->
-<div class="modal-backdrop" id="date-picker-modal" style="display:none" role="dialog" aria-modal="true">
-  <div class="modal fade-in" style="max-width:360px;padding:20px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <button class="btn btn-icon btn-ghost" id="dp-prev-month"><iconify-icon icon="solar:arrow-left-linear" style="font-size:18px"></iconify-icon></button>
-      <div style="font-size:15px;font-weight:700" id="dp-month-label">Tháng 6, 2026</div>
-      <button class="btn btn-icon btn-ghost" id="dp-next-month"><iconify-icon icon="solar:arrow-right-linear" style="font-size:18px"></iconify-icon></button>
-    </div>
-    <!-- Weekday headers -->
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">
-      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);padding:4px">CN</div>
-      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);padding:4px">T2</div>
-      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);padding:4px">T3</div>
-      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);padding:4px">T4</div>
-      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);padding:4px">T5</div>
-      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);padding:4px">T6</div>
-      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);padding:4px">T7</div>
-    </div>
-    <!-- Days grid -->
-    <div id="dp-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px"></div>
-    <div style="display:flex;justify-content:flex-end;margin-top:16px;gap:8px">
-      <button class="btn btn-ghost" onclick="closeDatePicker()">Huỷ</button>
-    </div>
-  </div>
-</div>
-
 <div data-component="login-modal"></div>
+<script>
+/* ── Inline DatePicker ── */
+window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];const DOW=['CN','T2','T3','T4','T5','T6','T7'];let _y,_m,_sel,_hid,_dis;function fmtVN(d){if(!d)return'Chọn ngày';const[y,m,dd]=d.split('-');return`${parseInt(dd)} ${MV[parseInt(m)-1]}, ${y}`;}function setVal(d){const h=document.getElementById(_hid),s=document.getElementById(_dis);if(h)h.value=d;if(s){s.textContent=fmtVN(d);s.style.color=d?'var(--text-primary)':'var(--text-muted)';}}function render(){const lb=document.getElementById('_dp_label');if(lb)lb.textContent=`${MV[_m]}, ${_y}`;const g=document.getElementById('_dp_days');if(!g)return;const fd=new Date(_y,_m,1).getDay(),dim=new Date(_y,_m+1,0).getDate(),ts=new Date().toISOString().slice(0,10);let h='';for(let i=0;i<fd;i++)h+='<div></div>';for(let d=1;d<=dim;d++){const ds=`${_y}-${String(_m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const isSel=ds===_sel,isTod=ds===ts;let bg='transparent',col='var(--text-primary)',fw='500';if(isSel){bg='var(--color-primary)';col='#1a1206';fw='800';}else if(isTod){bg='rgba(255,192,46,.15)';col='var(--color-primary)';fw='700';}h+=`<button type="button" style="padding:9px 0;text-align:center;font-size:13px;font-weight:${fw};border:none;cursor:pointer;border-radius:var(--radius-md);background:${bg};color:${col};font-family:var(--font-sans)" onclick="DatePicker._pick('${ds}')">${d}</button>`;}g.innerHTML=h;}function ensure(){if(document.getElementById('_dp_modal'))return;const el=document.createElement('div');el.className='modal-backdrop';el.id='_dp_modal';el.style.display='none';el.innerHTML=`<div class="modal fade-in" style="max-width:340px;padding:20px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><button class="btn btn-icon btn-ghost" onclick="DatePicker._prev()"><iconify-icon icon="solar:arrow-left-linear" style="font-size:18px"></iconify-icon></button><div style="font-size:15px;font-weight:700" id="_dp_label"></div><button class="btn btn-icon btn-ghost" onclick="DatePicker._next()"><iconify-icon icon="solar:arrow-right-linear" style="font-size:18px"></iconify-icon></button></div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">${DOW.map(d=>`<div style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);padding:4px">${d}</div>`).join('')}</div><div id="_dp_days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px"></div><div style="display:flex;justify-content:space-between;margin-top:14px"><button class="btn btn-ghost btn-sm" onclick="DatePicker._today()">Hôm nay</button><button class="btn btn-ghost btn-sm" onclick="DatePicker.close()">Đóng</button></div></div>`;el.addEventListener('click',e=>{if(e.target===el)DatePicker.close();});document.body.appendChild(el);}return{init(b,h,d,def){ensure();_hid=h;_dis=d;setVal(def||new Date().toISOString().slice(0,10));},open(h,d){ensure();_hid=h;_dis=d;const c=document.getElementById(h)?.value;const r=c?new Date(c+'T00:00:00'):new Date();_y=r.getFullYear();_m=r.getMonth();_sel=c||'';render();document.getElementById('_dp_modal').style.display='flex';},close(){const m=document.getElementById('_dp_modal');if(m)m.style.display='none';},_pick(d){_sel=d;setVal(d);this.close();},_prev(){_m--;if(_m<0){_m=11;_y--;}render();},_next(){_m++;if(_m>11){_m=0;_y++;}render();},_today(){const t=new Date();_y=t.getFullYear();_m=t.getMonth();_sel=t.toISOString().slice(0,10);render();},getValue(h){return document.getElementById(h)?.value||'';},setValue(h,d,v){_hid=h;_dis=d;setVal(v);}};})();
+</script>
 <script src="app.js" defer></script>
 <script src="components/components-loader.js" defer></script>
 <script>
@@ -222,7 +200,7 @@
       type: 'doughnut',
       data: {
         labels,
-        datasets: [{ data, backgroundColor: labels.map(l => CAT_COLORS[CATS.indexOf(l)] || '#5D5D66'), borderWidth: 0 }]
+        datasets: [{ data, backgroundColor: labels.map(l => CAT_COLORS[CATS.indexOf(l)] || '#5D5D66'), borderWidth: 2, borderColor: 'var(--bg-surface)', borderRadius: 6, spacing: 2 }]
       },
       options: {
         cutout: '70%',
@@ -339,79 +317,8 @@
     });
     document.getElementById('filter-fund')?.addEventListener('change', () => { if(_S) renderPage(_S); });
 
-    // ── Calendar Date Picker ──────────────────────────────────
-    const MONTHS_VN = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
-                       'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
-    let _dpYear, _dpMonth, _dpSelected;
-
-    function formatDateVN(dateStr) {
-      if (!dateStr) return 'Chọn ngày';
-      const [y,m,d] = dateStr.split('-');
-      return `${parseInt(d)} ${MONTHS_VN[parseInt(m)-1]}, ${y}`;
-    }
-
-    function setChiDateValue(dateStr) {
-      document.getElementById('chi-date-value').value = dateStr;
-      document.getElementById('chi-date-display').textContent = formatDateVN(dateStr);
-      document.getElementById('chi-date-display').style.color = 'var(--text-primary)';
-    }
-
-    function renderDpCalendar() {
-      const label = document.getElementById('dp-month-label');
-      if (label) label.textContent = `${MONTHS_VN[_dpMonth]}, ${_dpYear}`;
-      const grid = document.getElementById('dp-days');
-      if (!grid) return;
-      const firstDay = new Date(_dpYear, _dpMonth, 1).getDay(); // 0=Sun
-      const daysInMonth = new Date(_dpYear, _dpMonth+1, 0).getDate();
-      const today = new Date();
-      let html = '';
-      // Empty cells before first day
-      for (let i=0; i<firstDay; i++) html += '<div></div>';
-      for (let d=1; d<=daysInMonth; d++) {
-        const dateStr = `${_dpYear}-${String(_dpMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const isToday = d===today.getDate() && _dpMonth===today.getMonth() && _dpYear===today.getFullYear();
-        const isSelected = dateStr === _dpSelected;
-        const style = isSelected
-          ? 'background:var(--color-primary);color:#1a1206;font-weight:800;border-radius:var(--radius-md)'
-          : isToday
-          ? 'background:rgba(255,192,46,.15);color:var(--color-primary);border-radius:var(--radius-md)'
-          : 'border-radius:var(--radius-md)';
-        html += `<button type="button" onclick="dpSelectDay('${dateStr}')"
-          style="padding:8px 0;text-align:center;font-size:13px;font-weight:600;border:none;cursor:pointer;${style};font-family:var(--font-sans);background:${isSelected?'var(--color-primary)':isToday?'rgba(255,192,46,.15)':'transparent'};color:${isSelected?'#1a1206':isToday?'var(--color-primary)':'var(--text-primary)'}"
-          onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">${d}</button>`;
-      }
-      grid.innerHTML = html;
-    }
-
-    window.openDatePicker = function() {
-      const cur = document.getElementById('chi-date-value').value;
-      const ref = cur ? new Date(cur+'T00:00:00') : new Date();
-      _dpYear = ref.getFullYear(); _dpMonth = ref.getMonth();
-      _dpSelected = cur || '';
-      renderDpCalendar();
-      document.getElementById('date-picker-modal').style.display = 'flex';
-    };
-    window.closeDatePicker = function() {
-      document.getElementById('date-picker-modal').style.display = 'none';
-    };
-    window.dpSelectDay = function(dateStr) {
-      _dpSelected = dateStr;
-      setChiDateValue(dateStr);
-      closeDatePicker();
-    };
-
-    document.getElementById('date-picker-modal')?.addEventListener('click', e => {
-      if (e.target === document.getElementById('date-picker-modal')) closeDatePicker();
-    });
-    document.getElementById('dp-prev-month')?.addEventListener('click', () => {
-      _dpMonth--; if(_dpMonth<0){_dpMonth=11;_dpYear--;} renderDpCalendar();
-    });
-    document.getElementById('dp-next-month')?.addEventListener('click', () => {
-      _dpMonth++; if(_dpMonth>11){_dpMonth=0;_dpYear++;} renderDpCalendar();
-    });
-
-    // Init with today
-    setChiDateValue(new Date().toISOString().slice(0,10));
+    // Init date picker với ngày hôm nay
+    window.DatePicker?.init('chi-date-btn', 'chi-date-value', 'chi-date-display');
 
     document.getElementById('btn-add-chi')?.addEventListener('click', () => {
       if (!_S || !window._isLoggedIn?.()) return;
@@ -428,7 +335,7 @@
       window._saveS?.(_S);
       document.getElementById('chi-amount').value = '';
       document.getElementById('chi-note').value   = '';
-      setChiDateValue(new Date().toISOString().slice(0,10)); // reset về hôm nay
+      window.DatePicker?.init('chi-date-btn','chi-date-value','chi-date-display'); // reset về hôm nay
       renderPage(_S);
       setChiTab('history');
     });
