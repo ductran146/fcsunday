@@ -112,7 +112,24 @@
 <div class="app-shell">
   <div data-component="sidebar"></div>
   <div class="main-content">
-    <div data-component="header" data-title="Quỹ bia"></div>
+    <div class="topbar">
+      <img src="icon-192.png" alt="FC Sunday" class="topbar-logo" style="width:32px;height:32px;object-fit:contain;flex-shrink:0;border-radius:6px">
+      <span class="topbar-title" id="topbar-title">Quỹ bia</span>
+      <div style="flex:1"></div>
+      <div class="topbar-actions">
+        <a href="share.html" target="_blank" class="btn btn-icon btn-ghost" title="Xem tổng quỹ nhanh">
+          <iconify-icon icon="solar:eye-linear" style="font-size:22px"></iconify-icon>
+        </a>
+        <button class="btn btn-outline btn-sm" id="btn-login" style="display:inline-flex;gap:6px;align-items:center">
+          <iconify-icon icon="solar:login-2-linear" style="font-size:16px"></iconify-icon>
+          Đăng nhập
+        </button>
+        <button class="btn btn-icon btn-ghost auth-only" id="btn-setting" title="Cài đặt" style="display:none">
+          <iconify-icon icon="solar:settings-linear" style="font-size:22px"></iconify-icon>
+        </button>
+        <button class="topbar-avatar auth-only" id="btn-avatar" title="Đăng xuất" style="display:none">Đ</button>
+      </div>
+    </div>
     <main class="page" id="page-content" style="opacity:0;transition:opacity .2s">
 
       <div class="thu-thang-page-header">
@@ -558,6 +575,32 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
   };
   window._onAuthChange=function(){if(_S)renderPage(_S);};
 </script>
-<div data-component="login-modal"></div>
+<div class="sheet-backdrop" id="login-modal" style="display:none" role="dialog" aria-modal="true">
+  <div class="sheet fade-in">
+    <div class="modal-handle" style="display:block"></div>
+    <h2 class="modal-title">Đăng nhập</h2>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="field">
+        <label for="login-email">Email</label>
+        <input class="input" type="email" id="login-email" placeholder="email@example.com" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="login-password">Mật khẩu</label>
+        <input class="input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div id="login-error" style="display:none;background:rgba(224,57,44,.12);border:1px solid rgba(224,57,44,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--color-accent-light)">
+        <iconify-icon icon="solar:close-circle-linear" style="vertical-align:middle;margin-right:4px"></iconify-icon>
+        <span id="login-error-msg">Email hoặc mật khẩu không đúng.</span>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:4px">
+        <button class="btn btn-primary w-full" id="btn-login-submit" style="justify-content:center">
+          <iconify-icon icon="solar:lock-unlocked-linear" style="font-size:18px"></iconify-icon>
+          Đăng nhập
+        </button>
+        <button class="btn btn-ghost" id="btn-login-cancel" style="flex-shrink:0">Huỷ</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
