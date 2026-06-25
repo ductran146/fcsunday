@@ -319,10 +319,10 @@ img { max-width: 100%; display: block; }
 .btn:active { transform: scale(.97); }
 
 .btn-primary {
-  background: var(--color-accent);
-  color: #fff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-end));
+  color: #1a1206;
 }
-.btn-primary:hover { background: var(--color-accent-hover); }
+.btn-primary:hover { opacity: .9; }
 
 .btn-gold {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-end));
@@ -1908,5 +1908,199 @@ body[data-active="thanh-vien"] .member-debt-pill--month.is-debt {
 
   body[data-active="thanh-vien"] .member-debt-pill .money-k {
     display: inline;
+  }
+}
+
+/* ── Thành viên: filter tabs horizontal + search toolbar ── */
+body[data-active="thanh-vien"] .member-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+body[data-active="thanh-vien"] .member-filter-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+body[data-active="thanh-vien"] .member-filter-tabs .month-tab {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+body[data-active="thanh-vien"] .member-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+body[data-active="thanh-vien"] .member-search-input {
+  min-width: 0;
+  height: 44px;
+  border-radius: var(--radius-lg);
+}
+
+body[data-active="thanh-vien"] .member-add-btn {
+  min-width: 112px;
+  justify-content: center;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+
+body[data-active="thanh-vien"] .member-add-btn__icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  body[data-active="thanh-vien"] .member-filter-tabs {
+    margin-left: calc(var(--space-4) * -1);
+    margin-right: calc(var(--space-4) * -1);
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  body[data-active="thanh-vien"] .member-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-4);
+  }
+
+  body[data-active="thanh-vien"] .member-add-btn {
+    min-width: 88px;
+    min-height: 44px;
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+  }
+}
+
+/* ── Modal actions: cancel left, primary action right ── */
+.modal .member-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-1);
+}
+
+.modal .member-modal-actions #btn-cancel-member {
+  order: 1;
+  flex: 0 0 auto;
+}
+
+.modal .member-modal-actions #btn-save-member {
+  order: 2;
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+/* Fallback cho các modal đăng nhập nếu component dùng nhóm nút flex */
+.modal .btn-ghost[id*="cancel"],
+.modal .btn-ghost[id*="close"],
+.modal .btn-ghost[id*="hu"] {
+  order: 1;
+}
+
+.modal .btn-primary,
+.modal .btn-gold {
+  order: 2;
+}
+
+@media (max-width: 420px) {
+  .modal .member-modal-actions {
+    gap: var(--space-3);
+  }
+
+  .modal .member-modal-actions #btn-cancel-member {
+    min-width: 92px;
+  }
+}
+
+/* ── Thành viên: mobile swipe actions ── */
+body[data-active="thanh-vien"] .member-swipe-row {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+}
+
+body[data-active="thanh-vien"] .member-swipe-card {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  will-change: transform;
+  transition: transform .18s ease;
+}
+
+body[data-active="thanh-vien"] .member-swipe-actions {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  width: 112px;
+  padding: 0 0 0 var(--space-2);
+}
+
+body[data-active="thanh-vien"] .member-swipe-action {
+  width: 52px;
+  min-width: 52px;
+  height: 100%;
+  min-height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  font-size: 0;
+  cursor: pointer;
+}
+
+body[data-active="thanh-vien"] .member-swipe-action iconify-icon {
+  font-size: 22px;
+}
+
+body[data-active="thanh-vien"] .member-swipe-action--edit {
+  background: linear-gradient(135deg, rgba(255,192,46,.24), rgba(245,137,31,.18));
+  border-color: rgba(255,192,46,.28);
+  color: var(--color-primary);
+}
+
+body[data-active="thanh-vien"] .member-swipe-action--pay {
+  background: rgba(46,204,113,.18);
+  border-color: rgba(46,204,113,.28);
+  color: var(--color-success);
+}
+
+body[data-active="thanh-vien"] .member-swipe-action:active {
+  transform: scale(.96);
+}
+
+@media (max-width: 767px) {
+  body[data-active="thanh-vien"] .member-swipe-card {
+    touch-action: pan-y;
+  }
+
+  body[data-active="thanh-vien"] .member-swipe-row.is-open .member-swipe-card {
+    transform: translateX(-112px);
+  }
+}
+
+@media (min-width: 768px) {
+  body[data-active="thanh-vien"] .member-swipe-row {
+    overflow: visible;
+  }
+
+  body[data-active="thanh-vien"] .member-swipe-actions {
+    display: none;
   }
 }

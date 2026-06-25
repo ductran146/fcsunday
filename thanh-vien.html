@@ -26,17 +26,13 @@
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="year-selector"><iconify-icon icon="solar:calendar-linear" style="font-size:14px"></iconify-icon><span id="year-text">2026</span></div>
-          <button class="btn btn-primary auth-only" id="btn-add-member" style="display:none">
-            <iconify-icon icon="solar:add-circle-linear" style="font-size:18px"></iconify-icon>
-            Thêm thành viên
-          </button>
         </div>
       </div>
 
       <!-- KPI -->
       <div class="grid-2 member-kpi-grid" style="margin-bottom:24px">
         <div class="kpi-card">
-          <div class="kpi-card__label">Thành viên hoạt động</div>
+          <div class="kpi-card__label">Đang hoạt động</div>
           <div class="kpi-card__value" id="kpi-active">0</div>
         </div>
         <div class="kpi-card kpi-card--red">
@@ -54,7 +50,7 @@
       </div>
 
       <!-- Filter tabs -->
-      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <div class="member-filter-tabs">
         <button class="month-tab active" id="tab-all"      onclick="setFilter('all')">Tất cả</button>
         <button class="month-tab"        id="tab-active"   onclick="setFilter('active')">Đang hoạt động</button>
         <button class="month-tab"        id="tab-inactive" onclick="setFilter('inactive')">Tạm nghỉ</button>
@@ -64,6 +60,15 @@
         .month-tab { padding:7px 14px; border-radius:var(--radius-full); font-size:13px; font-weight:600; background:var(--bg-elevated); color:var(--text-secondary); border:1px solid var(--bg-border); cursor:pointer; transition:background .12s,color .12s,border-color .12s; }
         .month-tab.active { background:rgba(255,192,46,.15); color:var(--color-primary); border-color:rgba(255,192,46,.3); }
       </style>
+
+      <!-- Search + add -->
+      <div class="member-toolbar">
+        <input class="input member-search-input" id="member-search" type="search" placeholder="Tìm thành viên..." autocomplete="off">
+        <button class="btn btn-gold member-add-btn" id="btn-add-member" type="button">
+          <iconify-icon icon="solar:add-circle-linear" class="member-add-btn__icon" aria-hidden="true"></iconify-icon>
+          Thêm
+        </button>
+      </div>
 
       <!-- Member list -->
       <div id="member-list" style="display:flex;flex-direction:column;gap:8px"></div>
@@ -100,12 +105,12 @@
         <input type="text" class="input" id="member-note" placeholder="">
       </div>
       <input type="hidden" id="member-edit-id">
-      <div style="display:flex;gap:12px;margin-top:4px">
-        <button class="btn btn-primary w-full" id="btn-save-member" style="justify-content:center">
+      <div class="member-modal-actions">
+        <button class="btn btn-ghost" id="btn-cancel-member" type="button">Huỷ</button>
+        <button class="btn btn-primary" id="btn-save-member" type="button">
           <iconify-icon icon="solar:check-circle-linear" style="font-size:18px"></iconify-icon>
           Lưu
         </button>
-        <button class="btn btn-ghost" id="btn-cancel-member">Huỷ</button>
       </div>
     </div>
   </div>
@@ -116,13 +121,27 @@
 <script src="components/components-loader.js" defer></script>
 <script>
   const FEE = 200000, FINE = 50000, BASE_YEAR = 2026;
-  let _year = BASE_YEAR, _S = null, _filter = 'all';
+  let _year = BASE_YEAR, _S = null, _filter = 'all', _query = '';
 
   function fmt(n) { return new Intl.NumberFormat('vi-VN').format(Math.round(n||0)); }
-  function fmtK(n) { return new Intl.NumberFormat('vi-VN').format(Math.round((n||0) / 1000)) + 'K'; }
+  function fmtK(n) {
+    const value = Math.round(n || 0);
+    if (value === 0) return '0';
+    return new Intl.NumberFormat('vi-VN').format(Math.round(value / 1000)) + 'K';
+  }
   function moneyChip(n) {
     const value = Math.round(n || 0);
     return `<span class="money-full">${fmt(value)}</span><span class="money-k">${fmtK(value)}</span>`;
+  }
+
+  function normalizeText(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D')
+      .toLowerCase()
+      .trim();
   }
 
   const STATUS_LABEL = { active:'Đang hoạt động', inactive:'Tạm nghỉ', left:'Đã nghỉ' };
@@ -170,8 +189,6 @@
   function renderPage(S) {
     _S = S;
     const isAdmin = window._isLoggedIn?.();
-    const addBtn = document.getElementById('btn-add-member');
-    if (addBtn) addBtn.style.display = isAdmin ? 'inline-flex' : 'none';
 
     document.getElementById('year-text').textContent = _year;
 
@@ -191,14 +208,18 @@
     document.getElementById('kpi-no-thang').textContent  = fmt(noThangTotal);
     document.getElementById('kpi-no-bia').textContent    = fmt(noBiaTotal);
 
-    // Filter
-    const show = _filter === 'all' ? all : all.filter(m => m.status === _filter);
+    // Filter + search
+    const normalizedQuery = normalizeText(_query);
+    const byStatus = _filter === 'all' ? all : all.filter(m => m.status === _filter);
+    const show = normalizedQuery
+      ? byStatus.filter(m => normalizeText(m.name).includes(normalizedQuery))
+      : byStatus;
 
     const el = document.getElementById('member-list');
     if (!show.length) {
       el.innerHTML = `<div class="empty-state">
         <div class="empty-state__icon"><iconify-icon icon="solar:users-group-rounded-linear" style="font-size:48px"></iconify-icon></div>
-        <div class="empty-state__title">Chưa có thành viên</div>
+        <div class="empty-state__title">${_query ? 'Không tìm thấy thành viên' : 'Chưa có thành viên'}</div>
       </div>`;
       return;
     }
@@ -209,25 +230,103 @@
       const beerDebtClass = d.noBia > 0 ? 'is-debt' : 'is-clear';
       const totalDebtClass = d.total > 0 ? 'is-debt' : 'is-clear';
 
-      return `<div class="member-row member-detail-card fade-in">
-        <div class="member-detail-card__top">
-          <div class="member-row__name">${m.name}</div>
-          <div class="member-detail-card__status">
-            ${STATUS_BADGE[m.status] || ''}
-            ${isAdmin ? `<button class="btn btn-icon btn-ghost member-detail-card__edit" onclick="editMember(${m.id})" title="Sửa thông tin">
-              <iconify-icon icon="solar:pen-2-linear" style="font-size:16px"></iconify-icon>
-            </button>` : ''}
+      return `<div class="member-swipe-row fade-in">
+        ${isAdmin ? `<div class="member-swipe-actions" aria-hidden="true">
+          <button class="member-swipe-action member-swipe-action--edit" type="button" onclick="event.stopPropagation(); editMember(${m.id}); closeMemberSwipeRows();" title="Sửa thông tin" aria-label="Sửa thông tin">
+            <iconify-icon icon="solar:pen-2-linear"></iconify-icon>
+          </button>
+          <button class="member-swipe-action member-swipe-action--pay" type="button" onclick="event.stopPropagation(); payMember(${m.id});" title="Thanh toán" aria-label="Thanh toán">
+            <iconify-icon icon="solar:wallet-money-linear"></iconify-icon>
+          </button>
+        </div>` : ''}
+        <div class="member-row member-detail-card member-swipe-card">
+          <div class="member-detail-card__top">
+            <div class="member-row__name">${m.name}</div>
+            <div class="member-detail-card__status">
+              ${STATUS_BADGE[m.status] || ''}
+            </div>
           </div>
-        </div>
-        <div class="member-detail-card__meta-row">
-          <span class="member-debt-pill member-debt-pill--match">${d.soTran} thua</span>
-          <span class="member-debt-pill member-debt-pill--month ${monthDebtClass}">Tháng: ${moneyChip(d.noThang)}</span>
-          <span class="member-debt-pill member-debt-pill--beer ${beerDebtClass}">Bia: ${moneyChip(d.noBia)}</span>
-          <span class="member-debt-pill member-debt-pill--total ${totalDebtClass}">Σ: ${moneyChip(d.total)}</span>
+          <div class="member-detail-card__meta-row">
+            <span class="member-debt-pill member-debt-pill--match">${d.soTran} thua</span>
+            <span class="member-debt-pill member-debt-pill--month ${monthDebtClass}">Tháng: ${moneyChip(d.noThang)}</span>
+            <span class="member-debt-pill member-debt-pill--beer ${beerDebtClass}">Bia: ${moneyChip(d.noBia)}</span>
+            <span class="member-debt-pill member-debt-pill--total ${totalDebtClass}">Σ: ${moneyChip(d.total)}</span>
+          </div>
         </div>
       </div>`;
     }).join('');
+    setupMemberSwipeActions();
   }
+
+  function closeMemberSwipeRows(exceptRow) {
+    document.querySelectorAll('.member-swipe-row.is-open').forEach(row => {
+      if (row !== exceptRow) row.classList.remove('is-open');
+    });
+  }
+
+  window.closeMemberSwipeRows = closeMemberSwipeRows;
+
+  window.payMember = function(id) {
+    if (!window._isLoggedIn?.()) {
+      alert('Vui lòng đăng nhập trước khi thanh toán');
+      return;
+    }
+    sessionStorage.setItem('fcSundayPayMemberId', String(id));
+    window.location.href = 'thu-thang.html';
+  };
+
+  function setupMemberSwipeActions() {
+    const isMobile = window.matchMedia?.('(max-width: 767px)').matches;
+    document.querySelectorAll('.member-swipe-row').forEach(row => {
+      const card = row.querySelector('.member-swipe-card');
+      const actions = row.querySelector('.member-swipe-actions');
+      if (!card || !actions || !isMobile) return;
+
+      let startX = 0, startY = 0, currentX = 0, dragging = false, locked = false;
+      const maxSwipe = Math.max(112, actions.offsetWidth || 112);
+
+      card.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        currentX = row.classList.contains('is-open') ? -maxSwipe : 0;
+        dragging = true;
+        locked = false;
+        card.style.transition = 'none';
+      }, { passive: true });
+
+      card.addEventListener('touchmove', (e) => {
+        if (!dragging || e.touches.length !== 1) return;
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        if (!locked && Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        locked = true;
+        if (Math.abs(dy) > Math.abs(dx)) return;
+        const next = Math.max(-maxSwipe, Math.min(0, currentX + dx));
+        card.style.transform = `translateX(${next}px)`;
+        e.preventDefault();
+      }, { passive: false });
+
+      card.addEventListener('touchend', () => {
+        if (!dragging) return;
+        dragging = false;
+        const matrix = new DOMMatrixReadOnly(getComputedStyle(card).transform);
+        const x = matrix.m41 || 0;
+        card.style.transition = '';
+        card.style.transform = '';
+        if (x < -maxSwipe * 0.45) {
+          closeMemberSwipeRows(row);
+          row.classList.add('is-open');
+        } else {
+          row.classList.remove('is-open');
+        }
+      }, { passive: true });
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest?.('.member-swipe-row')) closeMemberSwipeRows();
+  });
 
   window.setFilter = function(f) {
     _filter = f;
@@ -251,6 +350,10 @@
   };
 
   function openAddMember() {
+    if (!window._isLoggedIn?.()) {
+      alert('Vui lòng đăng nhập để thêm thành viên');
+      return;
+    }
     document.getElementById('member-modal-title').textContent = 'Thêm thành viên';
     document.getElementById('member-name').value   = '';
     document.getElementById('member-phone').value  = '';
@@ -262,6 +365,10 @@
 
   window.onComponentsReady = function() {
     document.getElementById('btn-add-member')?.addEventListener('click', openAddMember);
+    document.getElementById('member-search')?.addEventListener('input', (e) => {
+      _query = e.target.value || '';
+      if (_S) renderPage(_S);
+    });
     document.getElementById('btn-cancel-member')?.addEventListener('click', () => {
       document.getElementById('add-member-modal').style.display = 'none';
     });
