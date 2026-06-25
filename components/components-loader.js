@@ -23,7 +23,8 @@
       const res = await fetch(`${COMPONENTS_PATH}${name}.html?v=${Date.now()}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const html = await res.text();
-      el.outerHTML = html;
+      el.insertAdjacentHTML('afterend', html);
+      el.remove();
     } catch (e) {
       console.warn(`[FC Sunday] Component "${name}" failed to load:`, e.message);
     }
