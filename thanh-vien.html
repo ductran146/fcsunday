@@ -361,8 +361,12 @@
       showAppNotice('Vui lòng đăng nhập trước khi thanh toán', 'Cần đăng nhập');
       return;
     }
-    sessionStorage.setItem('fcSundayPayMemberId', String(id));
-    window.location.href = 'thu-thang.html';
+    if (window._openPayModal) {
+      window._openPayModal(id);
+    } else {
+      // fallback: thử lại sau khi script modal load xong
+      setTimeout(() => window._openPayModal?.(id), 100);
+    }
   };
 
   function setupMemberSwipeActions() {
@@ -576,6 +580,173 @@
   };
   window._onDataReady = function(S) { renderPage(S); };
   window._onAuthChange = function() { if(_S) renderPage(_S); };
+</script>
+<!-- Modal: Thanh toán nợ -->
+<div class="modal-backdrop" id="pay-modal" style="display:none" role="dialog" aria-modal="true">
+  <div class="modal fade-in" style="max-height:90vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+
+    <!-- Header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div class="section-overline" style="margin-bottom:4px">Thanh toán nợ</div>
+        <div style="font-size:20px;font-weight:800" id="pay-member-name">—</div>
+      </div>
+      <button class="btn btn-icon btn-ghost" onclick="closePayModal()" style="flex-shrink:0;margin-top:-4px">
+        <iconify-icon icon="solar:close-circle-linear" style="font-size:22px"></iconify-icon>
+      </button>
+    </div>
+
+    <!-- Body: sections -->
+    <div id="pay-body" style="display:flex;flex-direction:column;gap:0">
+      <!-- injected by JS -->
+    </div>
+
+    <!-- Tổng -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;margin-top:4px;border-top:1.5px solid var(--bg-stroke)">
+      <span style="font-size:16px;font-weight:800">Tổng thanh toán</span>
+      <span style="font-size:22px;font-weight:900;color:var(--color-accent-light)" id="pay-total">0</span>
+    </div>
+
+    <!-- Note -->
+    <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:0 8px 16px;line-height:1.6" id="pay-note">
+      Xác nhận sẽ tự động cập nhật trạng thái đóng quỹ tháng và quỹ bia
+    </div>
+
+    <!-- Buttons -->
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-surface w-full" onclick="closePayModal()" style="justify-content:center">Huỷ</button>
+      <button class="btn btn-gold w-full" id="btn-confirm-pay" style="justify-content:center;font-size:15px;font-weight:800">
+        <iconify-icon icon="solar:check-circle-linear" style="font-size:18px"></iconify-icon>
+        Xác nhận thanh toán
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Thanh toán modal ─────────────────────────────────────
+  let _payMemberId = null;
+
+  window.closePayModal = function() {
+    document.getElementById('pay-modal').style.display = 'none';
+    _payMemberId = null;
+  };
+  document.getElementById('pay-modal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('pay-modal')) closePayModal();
+  });
+
+  window._openPayModal = function(id) {
+    if (!_S) return;
+    const member = (_S.members || []).find(m => m.id == id);
+    if (!member) return;
+    _payMemberId = id;
+
+    // Tính nợ
+    const MONTHS_LABEL = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+    const yearKey = _year === BASE_YEAR ? String(member.id) : `${member.id}_${_year}`;
+    const arr = (_S.thuThang?.[yearKey] || Array(12).fill(0)).slice(0, 12);
+    const debtMonths = arr.map((v, mi) => ({ v, mi })).filter(({ v, mi }) => v === 0 && isMonthCountedForDebt(mi));
+    const noThang = debtMonths.length * FEE;
+
+    const matches = (_S.matches || []).filter(m => _year === BASE_YEAR ? (!m.year || m.year === BASE_YEAR) : m.year === _year);
+    const unpaidMatches = matches.filter(m => (m.losers || []).some(l => l.memberId == id && !l.paid));
+    const noBia = unpaidMatches.length * FINE;
+
+    const total = noThang + noBia;
+
+    // Set tên
+    document.getElementById('pay-member-name').textContent = member.name;
+    document.getElementById('pay-total').textContent = fmt(total);
+
+    // Build body
+    let bodyHTML = '';
+
+    if (noThang > 0) {
+      bodyHTML += `
+        <div style="padding:16px 0;border-bottom:1px solid var(--bg-border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px">
+              <iconify-icon icon="solar:wallet-linear" style="font-size:18px;color:var(--color-primary)"></iconify-icon>
+              Nợ quỹ tháng
+            </div>
+            <div style="font-weight:800;color:var(--color-primary)">${fmt(noThang)}</div>
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary)">
+            Còn thiếu ${debtMonths.length} tháng × ${fmt(FEE)}: ${debtMonths.map(({ mi }) => MONTHS_LABEL[mi]).join(', ')}
+          </div>
+        </div>`;
+    }
+
+    if (noBia > 0) {
+      const matchLines = unpaidMatches.map(m => {
+        const d = m.date ? m.date.split('-').reverse().join('/') : '—';
+        return `<div style="font-size:12px;color:var(--text-secondary)">· Trận ${d}: 1 lần × ${fmt(FINE)}</div>`;
+      }).join('');
+      bodyHTML += `
+        <div style="padding:16px 0;border-bottom:1px solid var(--bg-border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px">
+              <iconify-icon icon="solar:cup-star-linear" style="font-size:18px;color:var(--color-primary)"></iconify-icon>
+              Nợ quỹ bia
+            </div>
+            <div style="font-weight:800;color:var(--color-primary)">${fmt(noBia)}</div>
+          </div>
+          ${matchLines}
+        </div>`;
+    }
+
+    if (total === 0) {
+      bodyHTML = `<div class="empty-state" style="padding:24px 0">
+        <div class="empty-state__icon"><iconify-icon icon="solar:check-circle-linear" style="font-size:40px;color:var(--color-success)"></iconify-icon></div>
+        <div class="empty-state__title">Không có khoản nợ nào</div>
+      </div>`;
+      document.getElementById('pay-note').style.display = 'none';
+      document.getElementById('btn-confirm-pay').disabled = true;
+    } else {
+      document.getElementById('pay-note').style.display = 'block';
+      document.getElementById('btn-confirm-pay').disabled = false;
+    }
+
+    document.getElementById('pay-body').innerHTML = bodyHTML;
+    document.getElementById('pay-modal').style.display = 'flex';
+  };
+
+  document.getElementById('btn-confirm-pay')?.addEventListener('click', async () => {
+    if (!_S || !_payMemberId) return;
+    const id = _payMemberId;
+    const btn = document.getElementById('btn-confirm-pay');
+    btn.disabled = true;
+    btn.innerHTML = '<iconify-icon icon="solar:spinner-linear" style="font-size:18px"></iconify-icon>Đang lưu…';
+
+    // 1. Update quỹ tháng: đánh dấu các tháng nợ → 1 (đã đóng)
+    const yearKey = _year === BASE_YEAR ? String(id) : `${id}_${_year}`;
+    const arr = (_S.thuThang?.[yearKey] || Array(12).fill(0)).slice(0, 12);
+    let changed = false;
+    arr.forEach((v, mi) => {
+      if (v === 0 && isMonthCountedForDebt(mi)) { arr[mi] = 1; changed = true; }
+    });
+    if (changed) {
+      if (!_S.thuThang) _S.thuThang = {};
+      _S.thuThang[yearKey] = arr;
+    }
+
+    // 2. Update quỹ bia: đánh dấu paid = true
+    (_S.matches || []).forEach(m => {
+      const yr = _year === BASE_YEAR ? (!m.year || m.year === BASE_YEAR) : m.year === _year;
+      if (!yr) return;
+      (m.losers || []).forEach(l => {
+        if (l.memberId == id && !l.paid) l.paid = true;
+      });
+    });
+
+    await window._saveS?.(_S);
+    renderPage(_S);
+    closePayModal();
+
+    btn.disabled = false;
+    btn.innerHTML = '<iconify-icon icon="solar:check-circle-linear" style="font-size:18px"></iconify-icon>Xác nhận thanh toán';
+  });
 </script>
 </body>
 </html>

@@ -50,8 +50,8 @@
         </div>
       </div>
 
-      <!-- KPI -->
-      <div class="grid-3" style="margin-bottom:24px">
+      <!-- KPI 2x2 -->
+      <div class="grid-2" style="margin-bottom:24px">
         <div class="kpi-card kpi-card--gold">
           <div class="kpi-card__label">Tổng thu bia</div>
           <div class="kpi-card__value" id="kpi-thu-bia">0</div>
@@ -64,16 +64,20 @@
           <div class="kpi-card__label">Số trận</div>
           <div class="kpi-card__value" id="kpi-so-tran">0</div>
         </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Người còn nợ</div>
+          <div class="kpi-card__value" id="kpi-nguoi-no">0</div>
+        </div>
       </div>
 
-      <!-- Leaderboard + add match -->
+      <!-- Leaderboard full width + add match -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
-        <!-- Leaderboard -->
+        <!-- Leaderboard podium -->
         <div class="card">
           <div class="section-overline" style="margin-bottom:4px">Xếp hạng</div>
-          <div class="section-title" style="font-size:16px;margin-bottom:16px">Top thua nhiều nhất</div>
-          <div class="leaderboard-list" id="bia-leaderboard">
-            <div style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px">Chưa có dữ liệu</div>
+          <div class="section-title" style="font-size:16px;margin-bottom:4px">Top thua nhiều nhất</div>
+          <div id="bia-leaderboard">
+            <div style="color:var(--text-muted);font-size:13px;text-align:center;padding:24px">Chưa có dữ liệu</div>
           </div>
         </div>
 
@@ -148,14 +152,41 @@
       .filter(x => x.m).sort((a,b) => b.n-a.n).slice(0,5);
 
     const el = document.getElementById('bia-leaderboard');
-    if (!ranking.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px">Chưa có dữ liệu</div>'; return; }
-    el.innerHTML = ranking.map((r,i) => `
-      <div class="leaderboard-item leaderboard-item--${i+1}" style="margin-bottom:8px">
-        <div class="leaderboard-item__rank">${i+1}</div>
+    if (!ranking.length) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:24px">Chưa có dữ liệu</div>';
+      return;
+    }
+
+    // Podium top 3
+    const podium = ranking.slice(0, 3);
+    const rest   = ranking.slice(3);
+    const medals = ['🥇','🥈','🥉'];
+    const podiumOrder = podium.length === 1 ? [podium[0]]
+                      : podium.length === 2 ? [podium[1], podium[0]]
+                      : [podium[1], podium[0], podium[2]];
+    const podiumRanks = podium.length === 1 ? [0]
+                      : podium.length === 2 ? [1, 0]
+                      : [1, 0, 2];
+
+    const podiumHTML = `<div class="podium-wrap">
+      ${podiumOrder.map((r, pi) => {
+        const rank = podiumRanks[pi] + 1;
+        return `<div class="podium-card podium-card--${rank}">
+          <div class="podium-medal">${medals[rank-1]}</div>
+          <div class="podium-name">${r.m.name}</div>
+          <div class="podium-losses">${r.n} trận</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+    const restHTML = rest.map((r, i) => `
+      <div class="leaderboard-item" style="margin-bottom:8px">
+        <div class="leaderboard-item__rank">${i + 4}</div>
         <div class="leaderboard-item__name">${r.m.name}</div>
         <div class="leaderboard-item__losses">${r.n} trận</div>
-        <div class="leaderboard-item__debt">${fmt(r.n*FINE)}</div>
       </div>`).join('');
+
+    el.innerHTML = podiumHTML + (rest.length ? `<div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">${restHTML}</div>` : '');
   }
 
   function renderMatches(matches, members) {
@@ -212,13 +243,18 @@
 
     // KPI
     let thuBia = 0, noBia = 0;
+    const nguoiNoSet = new Set();
     matches.forEach(m => {
-      (m.losers||[]).forEach(l => { if(l.paid) thuBia += FINE; else noBia += FINE; });
+      (m.losers||[]).forEach(l => {
+        if(l.paid) thuBia += FINE;
+        else { noBia += FINE; nguoiNoSet.add(l.memberId); }
+      });
       thuBia += (m.thuThem||0);
     });
-    document.getElementById('kpi-thu-bia').textContent = fmt(thuBia);
-    document.getElementById('kpi-con-no').textContent  = fmt(noBia);
-    document.getElementById('kpi-so-tran').textContent = matches.length;
+    document.getElementById('kpi-thu-bia').textContent  = fmt(thuBia);
+    document.getElementById('kpi-con-no').textContent   = fmt(noBia);
+    document.getElementById('kpi-so-tran').textContent  = matches.length;
+    document.getElementById('kpi-nguoi-no').textContent = nguoiNoSet.size;
 
     renderLeaderboard(matches, members);
 
