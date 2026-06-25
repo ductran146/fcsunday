@@ -288,7 +288,7 @@
       // Tablet/desktop hiển thị action trực tiếp, không cần gesture.
       if (!isMobile) return;
 
-      const getMaxSwipe = () => Math.max(112, Math.ceil(actions.getBoundingClientRect().width || 112));
+      const getMaxSwipe = () => Math.max(128, Math.ceil(actions.getBoundingClientRect().width || 128));
       const clamp = (value, maxSwipe) => Math.max(-maxSwipe, Math.min(0, value));
       const setX = (x) => { card.style.transform = `translate3d(${x}px, 0, 0)`; };
       const resetInlineTransform = () => {

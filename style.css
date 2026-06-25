@@ -2188,3 +2188,33 @@ body[data-active="thanh-vien"] .member-swipe-action:active {
     pointer-events: auto;
   }
 }
+
+
+/* ── Thành viên: mobile swipe action sizing update ── */
+@media (max-width: 767px) {
+  body[data-active="thanh-vien"] .member-swipe-actions {
+    width: 128px;
+    padding: 0 0 0 20px;
+    gap: 20px;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  body[data-active="thanh-vien"] .member-swipe-action {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    flex: 0 0 44px;
+    padding: 0;
+    border-radius: var(--radius-md);
+  }
+
+  body[data-active="thanh-vien"] .member-swipe-action iconify-icon {
+    font-size: 20px;
+  }
+
+  body[data-active="thanh-vien"] .member-swipe-row.is-open .member-swipe-card {
+    transform: translate3d(-128px, 0, 0);
+  }
+}
