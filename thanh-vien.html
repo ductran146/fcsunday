@@ -99,8 +99,8 @@
 </div>
 
 <!-- Add member modal -->
-<div class="modal-backdrop" id="add-member-modal" style="display:none">
-  <div class="modal fade-in">
+<div class="sheet-backdrop" id="add-member-modal" style="display:none">
+  <div class="sheet fade-in">
     <div class="modal-handle"></div>
     <h2 class="modal-title" id="member-modal-title">Thêm thành viên</h2>
     <div style="display:flex;flex-direction:column;gap:12px">
@@ -197,7 +197,7 @@
 
   const STATUS_LABEL = { active:'Đang hoạt động', inactive:'Tạm nghỉ', left:'Đã nghỉ' };
   const STATUS_BADGE = {
-    active:   '<span class="badge badge-success">Đang hoạt động</span>',
+    active:   '<span class="badge badge-success">Hoạt động</span>',
     inactive: '<span class="badge badge-warning">Tạm nghỉ</span>',
     left:     '<span class="badge badge-muted">Đã nghỉ</span>',
   };
@@ -603,7 +603,7 @@
     </div>
 
     <!-- Tổng -->
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;margin-top:4px;border-top:1.5px solid var(--bg-stroke)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;margin-top:4px;border-top:0px solid var(--bg-stroke)">
       <span style="font-size:16px;font-weight:800">Tổng thanh toán</span>
       <span style="font-size:22px;font-weight:900;color:var(--color-accent-light)" id="pay-total">0</span>
     </div>

@@ -178,22 +178,14 @@
       </tr>`;
     }).join('');
 
-    // Summary row
-    const summaryArr = MONTHS.map((_, mi) => {
-      let total = 0;
-      members.forEach(m => {
-        const key = getKey(m.id);
-        const arr = S.thuThang?.[key] || Array(12).fill(0);
-        if (arr[mi] === 1) total += FEE;
-      });
-      return `<td class="month-col" style="font-weight:700;color:var(--color-primary)">${total ? fmt(total) : '<span style="color:var(--text-muted)">—</span>'}</td>`;
-    }).join('');
+    // Summary row — chỉ hiện tổng thu cuối, các tháng để trống
+    const emptyMonths = MONTHS.map(() => `<td></td>`).join('');
 
     document.getElementById('thu-thang-tbody').innerHTML = rows +
       `<tr class="summary-row">
         <td class="sticky-col stt-col"></td>
         <td class="sticky-col name-col" style="font-weight:800">Tổng thu</td>
-        ${summaryArr}
+        ${emptyMonths}
         <td style="font-weight:800;color:var(--color-primary)">${fmt(totalDaThu)}</td>
       </tr>`;
 

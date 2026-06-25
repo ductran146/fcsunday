@@ -138,7 +138,6 @@ img { max-width: 100%; display: block; }
 .topbar {
   height: var(--topbar-h);
   background: var(--bg-surface);
-  border-bottom: 1px solid var(--bg-border);
   position: sticky;
   top: 0;
   z-index: 30;
@@ -235,7 +234,7 @@ img { max-width: 100%; display: block; }
   background: var(--bg-surface);
   border: 1px solid var(--bg-border);
   border-radius: var(--radius-xl);
-  padding: var(--space-5);
+  padding: var(--space-4);
 }
 
 .card-elevated {
@@ -333,7 +332,7 @@ img { max-width: 100%; display: block; }
 .btn-outline {
   background: transparent;
   color: var(--color-primary);
-  border: 1.5px solid var(--color-primary);
+  border: 1px solid var(--color-primary);
 }
 .btn-outline:hover { background: rgba(255,192,46,.1); }
 
@@ -443,7 +442,7 @@ table.fc-table {
 .field label.label-focus { color: var(--color-primary); }
 .input {
   background: var(--bg-elevated);
-  border: 1.5px solid var(--bg-stroke);
+  border: 1px solid var(--bg-stroke);
   border-radius: var(--radius-lg);
   color: var(--text-primary);
   font-size: 14px;
@@ -514,6 +513,8 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 .mt-auto { margin-top: auto; }
 .ml-auto { margin-left: auto; }
 .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); }
+/* Luôn giữ 2 cột bất kể breakpoint */
+.grid-2-fixed { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
 
@@ -532,28 +533,52 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 }
 
 /* ── Modal ── */
+/* ── Dialog (center) — thông báo, xác nhận ngắn ── */
 .modal-backdrop {
   position: fixed; inset: 0;
   background: rgba(0,0,0,.7);
   z-index: 100;
-  display: flex; align-items: flex-end; justify-content: center;
-}
-@media (min-width: 768px) {
-  .modal-backdrop { align-items: center; }
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--space-4);
 }
 .modal {
   background: var(--bg-surface);
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  border-radius: var(--radius-xl);
   padding: var(--space-6);
   width: 100%;
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
+  border: 1px solid var(--bg-stroke);
+}
+
+/* ── Bottom Sheet — form dài, nhập liệu ── */
+.sheet-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.7);
+  z-index: 100;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.sheet {
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   border-top: 1px solid var(--bg-stroke);
+  padding: var(--space-5) var(--space-6) calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+  width: 100%;
+  max-width: 640px;
+  max-height: 92dvh;
+  overflow-y: auto;
 }
 @media (min-width: 768px) {
-  .modal { border-radius: var(--radius-xl); border: 1px solid var(--bg-stroke); }
+  /* Desktop: bottom sheet thành center dialog */
+  .sheet-backdrop { align-items: center; padding: var(--space-4); }
+  .sheet {
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--bg-stroke);
+    padding: var(--space-6);
+  }
 }
+
 .modal-handle { width: 40px; height: 4px; background: var(--bg-stroke); border-radius: 2px; margin: 0 auto var(--space-5); }
 .modal-title { font-size: 18px; font-weight: 700; margin-bottom: var(--space-5); }
 
@@ -1499,7 +1524,7 @@ body[data-active="thu-thang"] .thu-thang-table .cell-btn {
 }
 
 /* ── Thu tháng: header year selector without arrows ── */
-body[data-active="thu-thang"] .thu-thang-page-header {
+body[data-active="thu-thang"] .thu-thang-page-header, body[data-active="thu-phat"] .thu-thang-page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1507,45 +1532,45 @@ body[data-active="thu-thang"] .thu-thang-page-header {
   margin-bottom: var(--space-6);
 }
 
-body[data-active="thu-thang"] .thu-thang-page-title {
+body[data-active="thu-thang"] .thu-thang-page-title, body[data-active="thu-phat"] .thu-thang-page-title {
   min-width: 0;
   flex: 1 1 auto;
 }
 
-body[data-active="thu-thang"] .thu-thang-page-title .text-h1 {
+body[data-active="thu-thang"] .thu-thang-page-title, body[data-active="thu-phat"] .thu-thang-page-title .text-h1 {
   margin-top: var(--space-2);
 }
 
-body[data-active="thu-thang"] .thu-thang-page-subtitle {
+body[data-active="thu-thang"] .thu-thang-page-subtitle, body[data-active="thu-phat"] .thu-thang-page-subtitle {
   margin-top: var(--space-2);
   font-size: 14px;
   font-weight: 400;
   color: var(--text-secondary);
 }
 
-body[data-active="thu-thang"] .thu-thang-year-selector {
+body[data-active="thu-thang"] .thu-thang-year-selector, body[data-active="thu-phat"] .thu-thang-year-selector {
   flex: 0 0 auto;
   min-width: 108px;
 }
 
 @media (max-width: 767px) {
-  body[data-active="thu-thang"] .thu-thang-page-header {
+  body[data-active="thu-thang"] .thu-thang-page-header, body[data-active="thu-phat"] .thu-thang-page-header {
     align-items: center;
     flex-wrap: nowrap;
     gap: var(--space-3);
   }
 
-  body[data-active="thu-thang"] .thu-thang-page-title .text-h1 {
+  body[data-active="thu-thang"] .thu-thang-page-title, body[data-active="thu-phat"] .thu-thang-page-title .text-h1 {
     font-size: clamp(24px, 7vw, 28px);
     line-height: 1.12;
   }
 
-  body[data-active="thu-thang"] .thu-thang-page-subtitle {
+  body[data-active="thu-thang"] .thu-thang-page-subtitle, body[data-active="thu-phat"] .thu-thang-page-subtitle {
     font-size: 14px;
     line-height: 1.35;
   }
 
-  body[data-active="thu-thang"] .thu-thang-year-selector {
+  body[data-active="thu-thang"] .thu-thang-year-selector, body[data-active="thu-phat"] .thu-thang-year-selector {
     min-width: 96px;
     padding-left: 10px;
     padding-right: 28px;
@@ -1553,11 +1578,11 @@ body[data-active="thu-thang"] .thu-thang-year-selector {
 }
 
 @media (max-width: 360px) {
-  body[data-active="thu-thang"] .thu-thang-page-title .text-h1 {
+  body[data-active="thu-thang"] .thu-thang-page-title, body[data-active="thu-phat"] .thu-thang-page-title .text-h1 {
     font-size: 22px;
   }
 
-  body[data-active="thu-thang"] .thu-thang-year-selector {
+  body[data-active="thu-thang"] .thu-thang-year-selector, body[data-active="thu-phat"] .thu-thang-year-selector {
     min-width: 88px;
   }
 }
@@ -2375,7 +2400,7 @@ body[data-active="thanh-vien"] .member-swipe-action:active {
 body[data-active="thanh-vien"] .member-sort-bar {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
   margin: 0 0 var(--space-4);
   flex-wrap: nowrap;
   overflow-x: auto;
