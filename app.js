@@ -135,7 +135,17 @@
 
   // ── Auth ───────────────────────────────────────────────────
   async function login(email, password) {
-    if (!_auth) throw new Error('Firebase chưa được khởi tạo.');
+    // Chờ Firebase sẵn sàng tối đa 3 giây
+    if (!_auth) {
+      await new Promise((resolve, reject) => {
+        let waited = 0;
+        const t = setInterval(() => {
+          waited += 100;
+          if (_auth) { clearInterval(t); resolve(); }
+          else if (waited >= 3000) { clearInterval(t); reject(new Error('Không kết nối được Firebase. Vui lòng thử lại.')); }
+        }, 100);
+      });
+    }
     await _auth.signInWithEmailAndPassword(email, password);
   }
 
@@ -163,7 +173,7 @@
     return loadData();
   }
 
-  // ── Expose to window ───────────────────────────────────────
+  // ── Expose to window sớm (trước khi Firebase boot) ────────
   window._login     = login;
   window._logout    = logout;
   window._isLoggedIn = isLoggedIn;
