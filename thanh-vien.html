@@ -272,7 +272,9 @@
 
     // Filter + search + sort
     const normalizedQuery = normalizeText(_query);
-    const byStatus = _filter === 'all' ? all : all.filter(m => m.status === _filter);
+    const byStatus = _filter === 'all'
+      ? all.filter(m => m.status !== 'left')
+      : all.filter(m => m.status === _filter);
     const searched = normalizedQuery
       ? byStatus.filter(m => normalizeText(m.name).includes(normalizedQuery))
       : byStatus;
