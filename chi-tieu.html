@@ -20,20 +20,28 @@
     <div data-component="header" data-title="Chi tiêu"></div>
     <main class="page" id="page-content" style="opacity:0;transition:opacity .2s">
 
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap">
-        <div>
+      <div class="thu-thang-page-header">
+        <div class="thu-thang-page-title">
           <div class="section-overline">Quản lý</div>
           <h1 class="text-h1">Chi tiêu</h1>
         </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <button class="btn btn-ghost btn-icon" id="btn-year-prev"><iconify-icon icon="solar:arrow-left-linear" style="font-size:18px"></iconify-icon></button>
-          <div class="year-selector"><iconify-icon icon="solar:calendar-linear" style="font-size:14px"></iconify-icon><span id="year-text">2026</span></div>
-          <button class="btn btn-ghost btn-icon" id="btn-year-next"><iconify-icon icon="solar:arrow-right-linear" style="font-size:18px"></iconify-icon></button>
+        <select class="year-selector thu-thang-year-selector" id="year-select">
+          <!-- options injected by JS -->
+        </select>
+      </div>
+
+      <!-- Tabs toggle: chỉ hiện khi login, nằm trên KPI -->
+      <div id="chi-tabs" style="display:none;margin-bottom:16px">
+        <div class="toggle-tab-group">
+          <button class="toggle-tab active" id="tab-history" onclick="setChiTab('history')">Lịch sử chi tiêu</button>
+          <button class="toggle-tab" id="tab-add" onclick="setChiTab('add')">
+            <iconify-icon icon="solar:add-circle-linear" style="font-size:14px;vertical-align:middle;margin-right:4px"></iconify-icon>Thêm khoản
+          </button>
         </div>
       </div>
 
       <!-- KPI -->
-      <div class="grid-3" style="margin-bottom:24px">
+      <div class="grid-3" id="chi-kpi" style="margin-bottom:24px">
         <div class="kpi-card kpi-card--red">
           <div class="kpi-card__label">Tổng chi</div>
           <div class="kpi-card__value" id="kpi-tong-chi">0</div>
@@ -48,35 +56,68 @@
         </div>
       </div>
 
-      <!-- Layout: chart + form -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
-        <!-- Donut chart -->
-        <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:16px">
-          <div style="width:100%">
-            <div class="section-overline" style="margin-bottom:4px">Thống kê</div>
-            <div class="section-title" style="font-size:16px">Phân bổ theo danh mục</div>
-          </div>
-          <div style="position:relative;width:200px;height:200px">
-            <canvas id="donut-chart"></canvas>
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;flex-direction:column">
-              <div style="font-size:12px;color:var(--text-muted)">Tổng</div>
-              <div style="font-size:18px;font-weight:800;color:var(--text-primary)" id="chart-center-val">0</div>
+      <!-- Panel: Lịch sử (luôn hiện) -->
+      <div id="panel-history">
+        <!-- Chart full width -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-overline" style="margin-bottom:4px">Thống kê</div>
+          <div class="section-title" style="font-size:16px;margin-bottom:16px">Phân bổ theo danh mục</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+            <div style="position:relative;width:220px;height:220px">
+              <canvas id="donut-chart"></canvas>
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;flex-direction:column">
+                <div style="font-size:12px;color:var(--text-muted)">Tổng</div>
+                <div style="font-size:20px;font-weight:800;color:var(--text-primary)" id="chart-center-val">0</div>
+              </div>
             </div>
+            <div id="chart-legend" class="chart-legend" style="width:100%;justify-content:flex-start"></div>
           </div>
-          <div id="chart-legend" class="chart-legend" style="width:100%"></div>
         </div>
+        <!-- History table -->
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div class="section-overline" style="margin-bottom:4px">Lịch sử</div>
+              <div class="section-title" style="font-size:16px">Tất cả khoản chi</div>
+            </div>
+            <select class="input" id="filter-fund" style="width:auto;font-size:13px;padding:6px 12px">
+              <option value="">Tất cả quỹ</option>
+              <option value="thang">Quỹ tháng</option>
+              <option value="bia">Quỹ bia</option>
+            </select>
+          </div>
+          <div class="table-wrap" style="margin-top:12px">
+            <table class="fc-table">
+              <thead>
+                <tr>
+                  <th>Ngày</th>
+                  <th>Danh mục</th>
+                  <th>Quỹ</th>
+                  <th>Ghi chú</th>
+                  <th style="text-align:right">Số tiền</th>
+                  <th class="auth-only" id="th-actions" style="display:none"></th>
+                </tr>
+              </thead>
+              <tbody id="chi-tbody">
+                <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px">Đang tải…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /panel-history -->
 
-        <!-- Add expense (admin) -->
-        <div class="card auth-only" id="add-chi-card" style="display:none">
+      <!-- Tab: Thêm khoản (admin only) -->
+      <div id="panel-add" style="display:none">
+        <div class="card">
           <div class="section-overline" style="margin-bottom:4px">Thêm khoản</div>
           <div class="section-title" style="font-size:16px;margin-bottom:16px">Ghi nhận chi tiêu</div>
-          <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:14px">
             <div class="field">
               <label>Ngày chi</label>
               <input type="date" class="input" id="chi-date">
             </div>
             <div class="field">
-              <label>Số tiền <span style="color:var(--text-muted);font-weight:400">(âm = cộng lại)</span></label>
+              <label>Số tiền <span style="color:var(--text-muted);font-weight:400">(âm = cộng lại quỹ)</span></label>
               <input type="number" class="input" id="chi-amount" placeholder="VD: 500000">
             </div>
             <div class="field">
@@ -101,48 +142,13 @@
               <label>Ghi chú</label>
               <input type="text" class="input" id="chi-note" placeholder="Mô tả khoản chi">
             </div>
-            <button class="btn btn-primary" id="btn-add-chi" style="justify-content:center">
+            <button class="btn btn-gold w-full" id="btn-add-chi" style="justify-content:center;font-size:15px">
               <iconify-icon icon="solar:add-circle-linear" style="font-size:18px"></iconify-icon>
               Thêm khoản chi
             </button>
           </div>
         </div>
-      </div>
-
-      <!-- History table -->
-      <div class="card" style="padding:0;overflow:hidden">
-        <div style="padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between">
-          <div>
-            <div class="section-overline" style="margin-bottom:4px">Lịch sử</div>
-            <div class="section-title" style="font-size:16px">Tất cả khoản chi</div>
-          </div>
-          <!-- Filter -->
-          <select class="input" id="filter-fund" style="width:auto;font-size:13px;padding:6px 12px">
-            <option value="">Tất cả quỹ</option>
-            <option value="thang">Quỹ tháng</option>
-            <option value="bia">Quỹ bia</option>
-          </select>
-        </div>
-        <div class="table-wrap" style="margin-top:12px">
-          <table class="fc-table">
-            <thead>
-              <tr>
-                <th>Ngày</th>
-                <th>Danh mục</th>
-                <th>Quỹ</th>
-                <th>Ghi chú</th>
-                <th style="text-align:right">Số tiền</th>
-                <th class="auth-only" id="th-actions" style="display:none"></th>
-              </tr>
-            </thead>
-            <tbody id="chi-tbody">
-              <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px">Đang tải…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-    </main>
+      </div><!-- /panel-add -->
   </div>
   <div data-component="bottom-nav"></div>
 </div>
@@ -219,8 +225,16 @@
     renderChart(chiTieu);
 
     // Admin card
-    const addCard = document.getElementById('add-chi-card');
-    if (addCard) addCard.style.display = isAdmin ? 'flex' : 'none';
+    // Tabs chỉ hiện khi admin; chưa login ẩn tabs
+    const chiTabs = document.getElementById('chi-tabs');
+    const tabAdd  = document.getElementById('tab-add');
+    if (isAdmin) {
+      if (chiTabs) chiTabs.style.display = 'flex';
+    } else {
+      if (chiTabs) chiTabs.style.display = 'none';
+      // reset về lịch sử khi logout
+      setChiTab('history');
+    }
     const thActions = document.getElementById('th-actions');
     if (thActions) thActions.style.display = isAdmin ? '' : 'none';
 
@@ -257,12 +271,40 @@
     renderPage(_S);
   };
 
-  function updateYearUI() { document.getElementById('year-text').textContent = _year; window._currentYear = _year; }
+  function updateYearUI() {
+    const sel = document.getElementById('year-select');
+    if (sel) {
+      const curY = new Date().getFullYear();
+      const minY = BASE_YEAR, maxY = Math.max(curY + 1, BASE_YEAR);
+      sel.innerHTML = '';
+      for (let y = maxY; y >= minY; y--) {
+        const opt = document.createElement('option');
+        opt.value = y; opt.textContent = y;
+        if (y === _year) opt.selected = true;
+        sel.appendChild(opt);
+      }
+    }
+    window._currentYear = _year;
+  }
+
+  let _activeChiTab = 'history';
+  window.setChiTab = function(tab) {
+    _activeChiTab = tab;
+    document.getElementById('panel-history').style.display = tab === 'history' ? 'block' : 'none';
+    document.getElementById('panel-add').style.display     = tab === 'add'     ? 'block' : 'none';
+    document.getElementById('tab-history').classList.toggle('active', tab === 'history');
+    document.getElementById('tab-add').classList.toggle('active', tab === 'add');
+    // Ẩn KPI khi đang ở tab thêm khoản
+    const kpiEl = document.getElementById('chi-kpi');
+    if (kpiEl) kpiEl.style.display = tab === 'add' ? 'none' : '';
+  };
 
   window.onComponentsReady = function() {
     updateYearUI();
-    document.getElementById('btn-year-prev').addEventListener('click', () => { _year--; updateYearUI(); if(_S) renderPage(_S); });
-    document.getElementById('btn-year-next').addEventListener('click', () => { _year++; updateYearUI(); if(_S) renderPage(_S); });
+    document.getElementById('year-select')?.addEventListener('change', (e) => {
+      _year = parseInt(e.target.value) || BASE_YEAR;
+      updateYearUI(); if(_S) renderPage(_S);
+    });
     document.getElementById('filter-fund')?.addEventListener('change', () => { if(_S) renderPage(_S); });
 
     const dateEl = document.getElementById('chi-date');
@@ -284,6 +326,7 @@
       document.getElementById('chi-amount').value = '';
       document.getElementById('chi-note').value   = '';
       renderPage(_S);
+      setChiTab('history'); // chuyển sang tab lịch sử sau khi thêm
     });
 
     document.getElementById('page-content').style.opacity = '1';
