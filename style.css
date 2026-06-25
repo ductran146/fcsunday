@@ -620,7 +620,7 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 .hero-fund {
   background: radial-gradient(ellipse at 60% -20%, rgba(224,57,44,.2) 0%, transparent 65%),
               radial-gradient(ellipse at 0% 100%, rgba(255,192,46,.08) 0%, transparent 60%),
-              var(--bg-surface);
+              rgba(12, 12, 15, 0.60);
   border: 1px solid var(--bg-stroke);
   border-radius: var(--radius-xl);
   padding: var(--space-4);
@@ -646,7 +646,7 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
   margin-top: var(--space-4);
 }
 .fund-split__item {
-  background: var(--bg-elevated);
+  background: rgba(24, 24, 29, 0.55);
   border: 1px solid var(--bg-border);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
