@@ -44,7 +44,7 @@
         <div class="thu-thang-page-title">
           <div class="section-overline">Quỹ tháng</div>
           <h1 class="text-h1">Thu hàng tháng</h1>
-          <div class="thu-thang-page-subtitle">200.000 ₫ / người / tháng</div>
+          <div class="thu-thang-page-subtitle">200.000 / người / tháng</div>
         </div>
         <select class="year-selector thu-thang-year-selector" id="year-select">
           <!-- options injected by JS -->
@@ -55,11 +55,11 @@
       <div class="grid-2 thu-thang-kpi-grid" style="margin-bottom:24px">
         <div class="kpi-card kpi-card--gold">
           <div class="kpi-card__label">Đã thu</div>
-          <div class="kpi-card__value" id="kpi-da-thu">0 ₫</div>
+          <div class="kpi-card__value" id="kpi-da-thu">0</div>
         </div>
         <div class="kpi-card kpi-card--red">
           <div class="kpi-card__label">Còn thiếu</div>
-          <div class="kpi-card__value" id="kpi-con-thieu">0 ₫</div>
+          <div class="kpi-card__value" id="kpi-con-thieu">0</div>
         </div>
       </div>
 
@@ -109,7 +109,7 @@
   const curMonth = new Date().getMonth(); // 0-based
   const curYear  = new Date().getFullYear();
 
-  function fmt(n) { return new Intl.NumberFormat('vi-VN').format(n) + ' ₫'; }
+  function fmt(n) { return new Intl.NumberFormat('vi-VN').format(n); }
   function cloneState(obj) { return JSON.parse(JSON.stringify(obj || {})); }
 
   function getKey(memberId) {

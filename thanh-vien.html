@@ -34,18 +34,22 @@
       </div>
 
       <!-- KPI -->
-      <div class="grid-3" style="margin-bottom:24px">
+      <div class="grid-2 member-kpi-grid" style="margin-bottom:24px">
         <div class="kpi-card">
           <div class="kpi-card__label">Thành viên hoạt động</div>
           <div class="kpi-card__value" id="kpi-active">0</div>
         </div>
         <div class="kpi-card kpi-card--red">
+          <div class="kpi-card__label">Chưa đóng tháng</div>
+          <div class="kpi-card__value" id="kpi-chua-dong">0</div>
+        </div>
+        <div class="kpi-card kpi-card--red">
           <div class="kpi-card__label">Tổng nợ tháng</div>
-          <div class="kpi-card__value" id="kpi-no-thang">0 ₫</div>
+          <div class="kpi-card__value" id="kpi-no-thang">0</div>
         </div>
         <div class="kpi-card kpi-card--red">
           <div class="kpi-card__label">Tổng nợ bia</div>
-          <div class="kpi-card__value" id="kpi-no-bia">0 ₫</div>
+          <div class="kpi-card__value" id="kpi-no-bia">0</div>
         </div>
       </div>
 
@@ -114,7 +118,12 @@
   const FEE = 200000, FINE = 50000, BASE_YEAR = 2026;
   let _year = BASE_YEAR, _S = null, _filter = 'all';
 
-  function fmt(n) { return new Intl.NumberFormat('vi-VN').format(Math.round(n||0)) + ' ₫'; }
+  function fmt(n) { return new Intl.NumberFormat('vi-VN').format(Math.round(n||0)); }
+  function fmtK(n) { return new Intl.NumberFormat('vi-VN').format(Math.round((n||0) / 1000)) + 'K'; }
+  function moneyChip(n) {
+    const value = Math.round(n || 0);
+    return `<span class="money-full">${fmt(value)}</span><span class="money-k">${fmtK(value)}</span>`;
+  }
 
   const STATUS_LABEL = { active:'Đang hoạt động', inactive:'Tạm nghỉ', left:'Đã nghỉ' };
   const STATUS_BADGE = {
@@ -123,10 +132,26 @@
     left:     '<span class="badge badge-muted">Đã nghỉ</span>',
   };
 
+  function isMonthCountedForDebt(monthIdx) {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonthIdx = now.getMonth();
+    if (_year < currentYear) return true;
+    if (_year > currentYear) return false;
+    return monthIdx <= currentMonthIdx;
+  }
+
   function calcDebt(S, member) {
     const yearKey = _year === BASE_YEAR ? String(member.id) : `${member.id}_${_year}`;
-    const arr = S.thuThang?.[yearKey] || Array(12).fill(0);
-    const noThang = arr.filter(v => v === 0).length * FEE;
+    const arr = (S.thuThang?.[yearKey] || Array(12).fill(0)).slice(0, 12);
+    while (arr.length < 12) arr.push(0);
+
+    // Chỉ tính nợ các tháng đã đến hạn.
+    // Các tháng tương lai vẫn có thể đánh dấu đóng trước ở trang Thu tháng,
+    // nhưng trạng thái chưa đóng của tháng tương lai không được cộng vào nợ.
+    const noThang = arr.reduce((sum, v, monthIdx) => {
+      return sum + (v === 0 && isMonthCountedForDebt(monthIdx) ? FEE : 0);
+    }, 0);
 
     const matches = (S.matches||[]).filter(m => {
       const yr = _year === BASE_YEAR ? (!m.year || m.year === BASE_YEAR) : m.year === _year;
@@ -154,15 +179,17 @@
     const active = all.filter(m => m.status !== 'left');
 
     // KPI
-    let noThangTotal = 0, noBiaTotal = 0;
+    let noThangTotal = 0, noBiaTotal = 0, chuaDongCount = 0;
     active.forEach(m => {
       const d = calcDebt(S, m);
       noThangTotal += d.noThang;
       noBiaTotal   += d.noBia;
+      if (d.noThang > 0) chuaDongCount += 1;
     });
-    document.getElementById('kpi-active').textContent   = all.filter(m=>m.status==='active').length;
-    document.getElementById('kpi-no-thang').textContent = fmt(noThangTotal);
-    document.getElementById('kpi-no-bia').textContent   = fmt(noBiaTotal);
+    document.getElementById('kpi-active').textContent    = all.filter(m=>m.status==='active').length;
+    document.getElementById('kpi-chua-dong').textContent = chuaDongCount;
+    document.getElementById('kpi-no-thang').textContent  = fmt(noThangTotal);
+    document.getElementById('kpi-no-bia').textContent    = fmt(noBiaTotal);
 
     // Filter
     const show = _filter === 'all' ? all : all.filter(m => m.status === _filter);
@@ -178,30 +205,26 @@
 
     el.innerHTML = show.map(m => {
       const d = calcDebt(S, m);
-      const totalColor = d.total > 0 ? 'color:var(--color-accent-light)' : 'color:var(--color-success)';
+      const monthDebtClass = d.noThang > 0 ? 'is-debt' : 'is-clear';
+      const beerDebtClass = d.noBia > 0 ? 'is-debt' : 'is-clear';
+      const totalDebtClass = d.total > 0 ? 'is-debt' : 'is-clear';
 
-      return `<div class="member-row fade-in">
-        <div class="avatar">${m.name.charAt(0)}</div>
-        <div class="member-row__info">
+      return `<div class="member-row member-detail-card fade-in">
+        <div class="member-detail-card__top">
           <div class="member-row__name">${m.name}</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
+          <div class="member-detail-card__status">
             ${STATUS_BADGE[m.status] || ''}
-            <span style="font-size:11px;color:var(--text-muted)">${d.soTran} trận</span>
+            ${isAdmin ? `<button class="btn btn-icon btn-ghost member-detail-card__edit" onclick="editMember(${m.id})" title="Sửa thông tin">
+              <iconify-icon icon="solar:pen-2-linear" style="font-size:16px"></iconify-icon>
+            </button>` : ''}
           </div>
         </div>
-        <div class="member-row__debt">
-          <div class="member-row__total" style="${totalColor}">${d.total > 0 ? fmt(d.total) : '✓ Sạch nợ'}</div>
-          ${d.noThang > 0 || d.noBia > 0 ? `
-          <div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;align-items:flex-end">
-            ${d.noThang ? `<div style="font-size:11px;color:var(--text-muted)">Tháng: <span style="color:var(--color-accent-light)">${fmt(d.noThang)}</span></div>` : ''}
-            ${d.noBia   ? `<div style="font-size:11px;color:var(--text-muted)">Bia: <span style="color:var(--color-accent-light)">${fmt(d.noBia)}</span></div>` : ''}
-          </div>` : ''}
+        <div class="member-detail-card__meta-row">
+          <span class="member-debt-pill member-debt-pill--match">${d.soTran} thua</span>
+          <span class="member-debt-pill member-debt-pill--month ${monthDebtClass}">Tháng: ${moneyChip(d.noThang)}</span>
+          <span class="member-debt-pill member-debt-pill--beer ${beerDebtClass}">Bia: ${moneyChip(d.noBia)}</span>
+          <span class="member-debt-pill member-debt-pill--total ${totalDebtClass}">Σ: ${moneyChip(d.total)}</span>
         </div>
-        ${isAdmin ? `<div style="display:flex;gap:4px;flex-shrink:0">
-          <button class="btn btn-icon btn-ghost" onclick="editMember(${m.id})" title="Sửa">
-            <iconify-icon icon="solar:pen-2-linear" style="font-size:16px"></iconify-icon>
-          </button>
-        </div>` : ''}
       </div>`;
     }).join('');
   }
