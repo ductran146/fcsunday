@@ -231,12 +231,14 @@
       const totalDebtClass = d.total > 0 ? 'is-debt' : 'is-clear';
 
       return `<div class="member-swipe-row fade-in">
-        ${isAdmin ? `<div class="member-swipe-actions" aria-hidden="true">
+        ${isAdmin ? `<div class="member-swipe-actions">
           <button class="member-swipe-action member-swipe-action--edit" type="button" onclick="event.stopPropagation(); editMember(${m.id}); closeMemberSwipeRows();" title="Sửa thông tin" aria-label="Sửa thông tin">
             <iconify-icon icon="solar:pen-2-linear"></iconify-icon>
+            <span class="member-swipe-action__text">Sửa thông tin</span>
           </button>
           <button class="member-swipe-action member-swipe-action--pay" type="button" onclick="event.stopPropagation(); payMember(${m.id});" title="Thanh toán" aria-label="Thanh toán">
             <iconify-icon icon="solar:wallet-money-linear"></iconify-icon>
+            <span class="member-swipe-action__text">Thanh toán</span>
           </button>
         </div>` : ''}
         <div class="member-row member-detail-card member-swipe-card">
@@ -282,16 +284,17 @@
       const actions = row.querySelector('.member-swipe-actions');
       if (!card || !actions || !isMobile) return;
 
-      let startX = 0, startY = 0, currentX = 0, dragging = false, locked = false;
-      const maxSwipe = Math.max(112, actions.offsetWidth || 112);
+      let startX = 0, startY = 0, currentX = 0, lastX = 0, dragging = false, horizontalSwipe = false;
+      const maxSwipe = Math.max(112, actions.getBoundingClientRect().width || 112);
 
       card.addEventListener('touchstart', (e) => {
         if (e.touches.length !== 1) return;
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
         currentX = row.classList.contains('is-open') ? -maxSwipe : 0;
+        lastX = currentX;
         dragging = true;
-        locked = false;
+        horizontalSwipe = false;
         card.style.transition = 'none';
       }, { passive: true });
 
@@ -299,22 +302,27 @@
         if (!dragging || e.touches.length !== 1) return;
         const dx = e.touches[0].clientX - startX;
         const dy = e.touches[0].clientY - startY;
-        if (!locked && Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-        locked = true;
-        if (Math.abs(dy) > Math.abs(dx)) return;
-        const next = Math.max(-maxSwipe, Math.min(0, currentX + dx));
-        card.style.transform = `translateX(${next}px)`;
+        if (!horizontalSwipe) {
+          if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+          if (Math.abs(dy) > Math.abs(dx)) {
+            dragging = false;
+            card.style.transition = '';
+            card.style.transform = '';
+            return;
+          }
+          horizontalSwipe = true;
+        }
+        lastX = Math.max(-maxSwipe, Math.min(0, currentX + dx));
+        card.style.transform = `translateX(${lastX}px)`;
         e.preventDefault();
       }, { passive: false });
 
       card.addEventListener('touchend', () => {
         if (!dragging) return;
         dragging = false;
-        const matrix = new DOMMatrixReadOnly(getComputedStyle(card).transform);
-        const x = matrix.m41 || 0;
         card.style.transition = '';
         card.style.transform = '';
-        if (x < -maxSwipe * 0.45) {
+        if (lastX < -maxSwipe * 0.35) {
           closeMemberSwipeRows(row);
           row.classList.add('is-open');
         } else {

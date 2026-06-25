@@ -2069,6 +2069,10 @@ body[data-active="thanh-vien"] .member-swipe-action iconify-icon {
   font-size: 22px;
 }
 
+body[data-active="thanh-vien"] .member-swipe-action__text {
+  display: none;
+}
+
 body[data-active="thanh-vien"] .member-swipe-action--edit {
   background: linear-gradient(135deg, rgba(255,192,46,.24), rgba(245,137,31,.18));
   border-color: rgba(255,192,46,.28);
@@ -2076,9 +2080,9 @@ body[data-active="thanh-vien"] .member-swipe-action--edit {
 }
 
 body[data-active="thanh-vien"] .member-swipe-action--pay {
-  background: rgba(46,204,113,.18);
-  border-color: rgba(46,204,113,.28);
-  color: var(--color-success);
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: #06140c;
 }
 
 body[data-active="thanh-vien"] .member-swipe-action:active {
@@ -2095,12 +2099,61 @@ body[data-active="thanh-vien"] .member-swipe-action:active {
   }
 }
 
+
+@media (max-width: 767px) {
+  body[data-active="thanh-vien"] .member-swipe-row {
+    touch-action: pan-y;
+  }
+
+  body[data-active="thanh-vien"] .member-swipe-action--pay {
+    background: var(--color-success);
+    border-color: var(--color-success);
+    color: #06140c;
+  }
+}
+
 @media (min-width: 768px) {
   body[data-active="thanh-vien"] .member-swipe-row {
     overflow: visible;
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+
+  body[data-active="thanh-vien"] .member-swipe-card {
+    order: 1;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   body[data-active="thanh-vien"] .member-swipe-actions {
-    display: none;
+    order: 2;
+    position: static;
+    inset: auto;
+    width: auto;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    padding: 0;
+  }
+
+  body[data-active="thanh-vien"] .member-swipe-action {
+    width: auto;
+    min-width: 132px;
+    height: 44px;
+    min-height: 44px;
+    align-self: center;
+    padding: 0 var(--space-4);
+    gap: var(--space-2);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  body[data-active="thanh-vien"] .member-swipe-action__text {
+    display: inline;
   }
 }
