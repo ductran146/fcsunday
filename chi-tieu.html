@@ -114,7 +114,11 @@
           <div style="display:flex;flex-direction:column;gap:14px">
             <div class="field">
               <label>Ngày chi</label>
-              <input type="date" class="input" id="chi-date">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px" id="chi-date-group">
+                <select class="input" id="chi-date-day" style="text-align:center"></select>
+                <select class="input" id="chi-date-month" style="text-align:center"></select>
+                <select class="input" id="chi-date-year" style="text-align:center"></select>
+              </div>
             </div>
             <div class="field">
               <label>Số tiền <span style="color:var(--text-muted);font-weight:400">(âm = cộng lại quỹ)</span></label>
@@ -307,12 +311,53 @@
     });
     document.getElementById('filter-fund')?.addEventListener('change', () => { if(_S) renderPage(_S); });
 
-    const dateEl = document.getElementById('chi-date');
-    if (dateEl) dateEl.value = new Date().toISOString().slice(0,10);
+    // ── Date select boxes ──────────────────────────────────
+    function initDateSelects(dateStr) {
+      const today = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
+      const BASE_YEAR = 2026;
+      const curY = new Date().getFullYear();
+
+      const dayEl   = document.getElementById('chi-date-day');
+      const monEl   = document.getElementById('chi-date-month');
+      const yearEl  = document.getElementById('chi-date-year');
+      if (!dayEl) return;
+
+      // Days 1-31
+      dayEl.innerHTML = Array.from({length:31},(_,i)=>{
+        const d = i+1, s = String(d).padStart(2,'0');
+        return `<option value="${s}"${d===today.getDate()?'selected':''}>${s}</option>`;
+      }).join('');
+
+      // Months 1-12
+      const MONTHS_VN = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
+                         'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+      monEl.innerHTML = MONTHS_VN.map((m,i)=>{
+        const val = String(i+1).padStart(2,'0');
+        return `<option value="${val}"${i===today.getMonth()?'selected':''}>${m}</option>`;
+      }).join('');
+
+      // Years BASE_YEAR to curY+1
+      yearEl.innerHTML = '';
+      for(let y = curY+1; y >= BASE_YEAR; y--) {
+        const opt = document.createElement('option');
+        opt.value = y; opt.textContent = y;
+        if(y === today.getFullYear()) opt.selected = true;
+        yearEl.appendChild(opt);
+      }
+    }
+
+    function getChiDate() {
+      const d = document.getElementById('chi-date-day')?.value;
+      const m = document.getElementById('chi-date-month')?.value;
+      const y = document.getElementById('chi-date-year')?.value;
+      return (d && m && y) ? `${y}-${m}-${d}` : '';
+    }
+
+    initDateSelects(); // default = today
 
     document.getElementById('btn-add-chi')?.addEventListener('click', () => {
       if (!_S || !window._isLoggedIn?.()) return;
-      const date   = document.getElementById('chi-date').value;
+      const date   = getChiDate();
       const amount = parseFloat(document.getElementById('chi-amount').value);
       const cat    = document.getElementById('chi-cat').value;
       const fund   = document.getElementById('chi-fund').value;
@@ -325,8 +370,9 @@
       window._saveS?.(_S);
       document.getElementById('chi-amount').value = '';
       document.getElementById('chi-note').value   = '';
+      initDateSelects(); // reset ngày về hôm nay
       renderPage(_S);
-      setChiTab('history'); // chuyển sang tab lịch sử sau khi thêm
+      setChiTab('history');
     });
 
     document.getElementById('page-content').style.opacity = '1';
