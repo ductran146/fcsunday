@@ -156,7 +156,17 @@
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
     // Avatar → logout
-    btnAvatar?.addEventListener('click', () => { window._logout?.(); });
+    btnAvatar?.addEventListener('click', async () => {
+      const orig = btnAvatar.textContent;
+      btnAvatar.textContent = '…';
+      btnAvatar.disabled = true;
+      try {
+        await window._logout?.();
+      } finally {
+        btnAvatar.textContent = orig;
+        btnAvatar.disabled = false;
+      }
+    });
 
     btnSubmit?.addEventListener('click', async () => {
       const email = document.getElementById('login-email')?.value?.trim();
