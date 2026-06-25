@@ -268,9 +268,42 @@
 
   window.closeMemberSwipeRows = closeMemberSwipeRows;
 
+  function showAppNotice(message, title = 'Thông báo') {
+    const old = document.querySelector('.app-notice-backdrop');
+    if (old) old.remove();
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'app-notice-backdrop';
+    backdrop.innerHTML = `
+      <div class="app-notice" role="dialog" aria-modal="true" aria-labelledby="app-notice-title">
+        <div class="app-notice__icon">
+          <iconify-icon icon="solar:info-circle-linear"></iconify-icon>
+        </div>
+        <div class="app-notice__content">
+          <div class="app-notice__title" id="app-notice-title">${title}</div>
+          <div class="app-notice__message">${message}</div>
+        </div>
+        <button class="btn btn-gold app-notice__button" type="button">Đóng</button>
+      </div>`;
+
+    const close = () => backdrop.remove();
+    backdrop.querySelector('.app-notice__button')?.addEventListener('click', close);
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) close();
+    });
+    document.addEventListener('keydown', function onEsc(e) {
+      if (e.key === 'Escape') {
+        close();
+        document.removeEventListener('keydown', onEsc);
+      }
+    });
+    document.body.appendChild(backdrop);
+    requestAnimationFrame(() => backdrop.classList.add('is-visible'));
+  }
+
   window.payMember = function(id) {
     if (!window._isLoggedIn?.()) {
-      alert('Vui lòng đăng nhập trước khi thanh toán');
+      showAppNotice('Vui lòng đăng nhập trước khi thanh toán', 'Cần đăng nhập');
       return;
     }
     sessionStorage.setItem('fcSundayPayMemberId', String(id));
@@ -403,7 +436,7 @@
 
   window.editMember = function(id) {
     if (!window._isLoggedIn?.()) {
-      alert('Vui lòng đăng nhập trước khi sửa thông tin');
+      showAppNotice('Vui lòng đăng nhập trước khi sửa thông tin', 'Cần đăng nhập');
       return;
     }
     if (!_S) return;
@@ -420,7 +453,7 @@
 
   function openAddMember() {
     if (!window._isLoggedIn?.()) {
-      alert('Vui lòng đăng nhập để thêm thành viên');
+      showAppNotice('Vui lòng đăng nhập để thêm thành viên', 'Cần đăng nhập');
       return;
     }
     document.getElementById('member-modal-title').textContent = 'Thêm thành viên';
@@ -452,7 +485,7 @@
       const status = document.getElementById('member-status').value;
       const note   = document.getElementById('member-note').value.trim();
       const editId = document.getElementById('member-edit-id').value;
-      if (!name) { alert('Vui lòng nhập tên'); return; }
+      if (!name) { showAppNotice('Vui lòng nhập tên thành viên', 'Thiếu thông tin'); return; }
       if (!_S.members) _S.members = [];
       if (editId) {
         const m = _S.members.find(x => x.id == editId);

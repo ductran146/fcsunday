@@ -2218,3 +2218,97 @@ body[data-active="thanh-vien"] .member-swipe-action:active {
     transform: translate3d(-128px, 0, 0);
   }
 }
+
+/* ── App notice modal: FC Sunday V2 style ── */
+.app-notice-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 260;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  background: rgba(0, 0, 0, .72);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+
+.app-notice-backdrop.is-visible {
+  opacity: 1;
+}
+
+.app-notice {
+  width: min(420px, 100%);
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: 1px solid var(--bg-stroke);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 192, 46, .12) 0%, transparent 44%),
+    var(--bg-surface);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .62);
+  transform: translateY(8px) scale(.98);
+  transition: transform .18s ease;
+}
+
+.app-notice-backdrop.is-visible .app-notice {
+  transform: translateY(0) scale(1);
+}
+
+.app-notice__icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 192, 46, .12);
+  color: var(--color-primary);
+  font-size: 24px;
+}
+
+.app-notice__content {
+  min-width: 0;
+  align-self: center;
+}
+
+.app-notice__title {
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -.01em;
+}
+
+.app-notice__message {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.app-notice__button {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-height: 44px;
+  justify-content: center;
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 767px) {
+  .app-notice-backdrop {
+    align-items: flex-end;
+    padding: var(--space-4);
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-notice {
+    width: 100%;
+    border-radius: 24px;
+    padding: var(--space-5);
+  }
+}
