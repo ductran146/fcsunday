@@ -211,7 +211,7 @@
       </div>
       <div class="field">
         <label>Thu thêm (nếu có)</label>
-        <input type="number" class="input" id="match-thu-them" placeholder="0" min="0">
+        <input type="text" inputmode="numeric" class="input" id="match-thu-them" placeholder="0" autocomplete="off" data-money>
       </div>
       <div class="field">
         <label>Ghi chú thu thêm</label>
@@ -354,7 +354,7 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
       .filter(btn=>btn.dataset.state!=='0')
       .map(btn=>({memberId:parseInt(btn.dataset.mid), paid:btn.dataset.state==='2'}));
 
-    const thuThem=parseInt(document.getElementById('match-thu-them').value)||0;
+    const thuThem=window._moneyInput?.parse(document.getElementById('match-thu-them').value)||0;
     const ghiChu=document.getElementById('match-ghi-chu').value.trim();
     const mi=new Date(date).getMonth();
     if(!_S.matches) _S.matches=[];

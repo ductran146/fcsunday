@@ -611,7 +611,7 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 .modal {
   background: var(--bg-surface);
   border-radius: var(--radius-xl);
-  padding: var(--space-6);
+  padding: var(--space-4);
   width: 100%;
   max-width: 480px;
   max-height: 90vh;

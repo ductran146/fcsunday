@@ -129,19 +129,57 @@
     if (!isPWA()) {
       const btn = document.getElementById('btn-install-android');
       const sec = document.getElementById('sidebar-install');
+      const headerBtn = document.getElementById('btn-pwa-install');
       if (btn) { btn.style.display = 'flex'; }
       if (sec) { sec.style.display = 'block'; }
+      if (headerBtn) { headerBtn.style.display = 'inline-flex'; }
     }
   });
+  window.addEventListener('appinstalled', () => {
+    const headerBtn = document.getElementById('btn-pwa-install');
+    if (headerBtn) headerBtn.style.display = 'none';
+    _deferredPrompt = null;
+  });
+
+  // ── Header PWA button click ────────────────────────────────
+  function initPWAHeaderBtn() {
+    const btn = document.getElementById('btn-pwa-install');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+      if (_deferredPrompt) {
+        _deferredPrompt.prompt();
+        const { outcome } = await _deferredPrompt.userChoice;
+        if (outcome === 'accepted') btn.style.display = 'none';
+        _deferredPrompt = null;
+      } else {
+        // iOS: show tooltip guide
+        _showIOSInstallGuide(btn);
+      }
+    });
+  }
+  function _showIOSInstallGuide(anchorBtn) {
+    const existing = document.getElementById('_pwa_ios_guide');
+    if (existing) { existing.remove(); return; }
+    const el = document.createElement('div');
+    el.id = '_pwa_ios_guide';
+    el.style.cssText = 'position:fixed;top:60px;right:12px;width:min(280px,calc(100vw - 24px));background:var(--bg-elevated);border:1px solid var(--bg-stroke);border-radius:var(--radius-lg);padding:14px 16px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.5);font-family:var(--font-sans)';
+    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-size:13px;font-weight:700;color:var(--text-primary)">Cài ứng dụng</div><button id="_pwa_ios_close" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:0">&times;</button></div><div style="font-size:12px;color:var(--text-secondary);line-height:1.7">Bấm <span style="background:var(--bg-stroke);border-radius:4px;padding:1px 5px">&#9650; Chia s&#7867;</span> r&#7891;i ch&#7885;n <strong style="color:var(--text-primary)">Th&#234;m v&#224;o m&#224;n h&#236;nh ch&#237;nh</strong></div><div style="position:absolute;top:-7px;right:18px;width:12px;height:12px;background:var(--bg-elevated);border-left:1px solid var(--bg-stroke);border-top:1px solid var(--bg-stroke);transform:rotate(45deg)"></div>';
+    document.body.appendChild(el);
+    document.getElementById('_pwa_ios_close').addEventListener('click', () => el.remove());
+    setTimeout(() => el?.remove(), 8000);
+  }
 
   // ── iOS install hint ───────────────────────────────────────
   function showIOSHint() {
     const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
-    if (isIOS && !isPWA()) {
+    const isMobile = window.innerWidth < 768;
+    if (isIOS && isMobile && !isPWA()) {
       const hint = document.getElementById('ios-install-hint');
       const sec  = document.getElementById('sidebar-install');
+      const headerBtn = document.getElementById('btn-pwa-install');
       if (hint) { hint.style.display = 'block'; }
       if (sec)  { sec.style.display = 'block'; }
+      if (headerBtn) { headerBtn.style.display = 'inline-flex'; }
     }
   }
 
@@ -260,6 +298,7 @@
     updateSidebarYear();
     applyAuthCache(); // Áp dụng cached auth state ngay — không chờ Firebase
     showIOSHint();
+    initPWAHeaderBtn();
     initLoginModal();
     initInstallBtn();
 

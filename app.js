@@ -217,3 +217,49 @@
   }
 
 })();
+
+// ── Money Input Helper ─────────────────────────────────────
+// Dùng chung cho tất cả input số tiền trong dự án
+(function() {
+  'use strict';
+
+  function formatMoney(raw) {
+    // Bỏ mọi ký tự không phải số và dấu trừ đầu
+    const isNeg = raw.startsWith('-');
+    const digits = raw.replace(/[^\d]/g, '');
+    if (!digits) return isNeg ? '-' : '';
+    // Format với dấu chấm mỗi 3 chữ số
+    const formatted = parseInt(digits, 10).toLocaleString('vi-VN');
+    return (isNeg ? '-' : '') + formatted;
+  }
+
+  function parseMoney(formatted) {
+    if (!formatted) return NaN;
+    // Bỏ dấu chấm, giữ dấu trừ
+    return parseFloat(formatted.replace(/\./g, '').replace(/,/g, '')) || 0;
+  }
+
+  function attachMoneyInput(el) {
+    if (!el || el.dataset.moneyInput) return;
+    el.dataset.moneyInput = '1';
+    el.addEventListener('input', function() {
+      const pos = this.selectionStart;
+      const oldLen = this.value.length;
+      this.value = formatMoney(this.value);
+      // Giữ cursor position
+      const diff = this.value.length - oldLen;
+      this.setSelectionRange(pos + diff, pos + diff);
+    });
+    el.addEventListener('blur', function() {
+      this.value = formatMoney(this.value);
+    });
+  }
+
+  // Expose globally
+  window._moneyInput = { attach: attachMoneyInput, parse: parseMoney, format: formatMoney };
+
+  // Auto-attach khi DOM ready
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-money]').forEach(attachMoneyInput);
+  });
+})();

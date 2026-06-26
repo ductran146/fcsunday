@@ -121,10 +121,14 @@
       </div>
 
       <!-- KPI -->
-      <div class="grid-3" id="chi-kpi" style="margin-bottom:24px">
+      <div id="chi-kpi" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px">
         <div class="kpi-card kpi-card--red">
           <div class="kpi-card__label">Tổng chi</div>
           <div class="kpi-card__value" id="kpi-tong-chi">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Chi tiêu gần nhất</div>
+          <div class="kpi-card__value" id="kpi-recent-amount">—</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-card__label">Chi từ quỹ tháng</div>
@@ -188,7 +192,7 @@
             </div>
             <div class="field">
               <label>Số tiền <span style="color:var(--text-muted);font-weight:400">(âm = cộng lại quỹ)</span></label>
-              <input type="number" class="input" id="chi-amount" placeholder="VD: 500000">
+              <input type="text" inputmode="numeric" class="input" id="chi-amount" placeholder="VD: 500.000" autocomplete="off" data-money>
             </div>
             <div class="field">
               <label>Danh mục</label>
@@ -313,6 +317,19 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
     document.getElementById('kpi-chi-thang').textContent = fmt(chiThang);
     document.getElementById('kpi-chi-bia').textContent   = fmt(chiBia);
 
+    // KPI: Chi tieu gan nhat
+    const positiveItems = chiTieu.filter(c => (c.amount || 0) > 0);
+    const recentItem = positiveItems.length
+      ? [...positiveItems].sort((a,b) => (b.date||'').localeCompare(a.date||''))[0]
+      : null;
+    const recentAmountEl = document.getElementById('kpi-recent-amount');
+    if (recentItem) {
+      recentAmountEl.textContent = fmt(recentItem.amount);
+      recentAmountEl.style.color = '';
+    } else {
+      recentAmountEl.textContent = '0';
+    }
+
     renderChart(chiTieu);
 
     // Admin card
@@ -398,18 +415,43 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
     setChiFormMode('add');
   }
 
+  let _editChiId = null;
+
+  window.closeEditChi = function() {
+    document.getElementById('edit-chi-modal').style.display = 'none';
+    _editChiId = null;
+  };
+  document.getElementById('edit-chi-modal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('edit-chi-modal')) closeEditChi();
+  });
+  document.getElementById('btn-save-edit-chi')?.addEventListener('click', async () => {
+    if (!_S || !_editChiId) return;
+    const date   = document.getElementById('edit-chi-date-value').value;
+    const amount = window._moneyInput?.parse(document.getElementById('edit-chi-amount').value);
+    const cat    = document.getElementById('edit-chi-cat').value;
+    const fund   = document.getElementById('edit-chi-fund').value;
+    const note   = document.getElementById('edit-chi-note').value.trim();
+    if (!date || isNaN(amount)) { alert('Vui lòng điền đủ thông tin'); return; }
+    const item = (_S.chiTieu||[]).find(x => x.id == _editChiId);
+    if (item) { item.date=date; item.amount=amount; item.cat=cat; item.fund=fund; item.note=note; }
+    await window._saveS?.(_S);
+    closeEditChi();
+    renderPage(_S);
+  });
+
   window.editChiTieu = function(id) {
     if (!window._isLoggedIn?.() || !_S) return;
-    const c = (_S.chiTieu||[]).find(x=>x.id==id);
+    const c = (_S.chiTieu||[]).find(x => x.id == id);
     if (!c) return;
-    setChiTab('add');
-    window.DatePicker?.setValue('chi-date-value','chi-date-display', c.date || new Date().toISOString().slice(0,10));
-    document.getElementById('chi-amount').value = c.amount ?? '';
-    document.getElementById('chi-cat').value = c.cat || 'Khác';
-    document.getElementById('chi-fund').value = c.fund || 'thang';
-    document.getElementById('chi-note').value = c.note || '';
-    setChiFormMode('edit', c);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    _editChiId = id;
+    // Fill form
+    window.DatePicker?.setValue('edit-chi-date-value','edit-chi-date-display', c.date || new Date().toISOString().slice(0,10));
+    document.getElementById('edit-chi-amount').value = window._moneyInput?.format(String(c.amount ?? '')) ?? (c.amount ?? '');
+    document.getElementById('edit-chi-cat').value    = c.cat || 'Khác';
+    document.getElementById('edit-chi-fund').value   = c.fund || 'thang';
+    document.getElementById('edit-chi-note').value   = c.note || '';
+    // Open modal
+    document.getElementById('edit-chi-modal').style.display = 'flex';
   };
 
   window.deleteChiTieu = function(id) {
@@ -490,7 +532,7 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
     document.getElementById('btn-add-chi')?.addEventListener('click', () => {
       if (!_S || !window._isLoggedIn?.()) return;
       const date   = document.getElementById('chi-date-value').value;
-      const amount = parseFloat(document.getElementById('chi-amount').value);
+      const amount = window._moneyInput?.parse(document.getElementById('chi-amount').value);
       const cat    = document.getElementById('chi-cat').value;
       const fund   = document.getElementById('chi-fund').value;
       const note   = document.getElementById('chi-note').value.trim();
@@ -512,6 +554,10 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
       setChiTab('history');
     });
 
+    // Attach money formatting
+    ['chi-amount','edit-chi-amount'].forEach(id => {
+      window._moneyInput?.attach(document.getElementById(id));
+    });
     document.getElementById('page-content').style.opacity = '1';
   };
   function setupChiSwipe() {
@@ -558,5 +604,65 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
   window._onDataReady = function(S) { renderPage(S); };
   window._onAuthChange = function() { if(_S) renderPage(_S); };
 </script>
+<!-- Sheet: Sửa khoản chi -->
+<div class="sheet-backdrop" id="edit-chi-modal" style="display:none" role="dialog" aria-modal="true">
+  <div class="sheet fade-in">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div class="section-overline" style="margin-bottom:2px">Chi tiêu</div>
+        <h2 class="modal-title" style="margin-bottom:0">Sửa khoản chi</h2>
+      </div>
+      <button class="btn btn-icon btn-ghost" onclick="closeEditChi()" style="flex-shrink:0;margin-top:-4px">
+        <iconify-icon icon="solar:close-circle-linear" style="font-size:22px"></iconify-icon>
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="field">
+        <label>Ngày chi</label>
+        <button type="button" class="input" id="edit-chi-date-btn"
+          style="text-align:left;cursor:pointer;display:flex;align-items:center;gap:8px"
+          onclick="window.DatePicker?.open('edit-chi-date-value','edit-chi-date-display')">
+          <iconify-icon icon="solar:calendar-linear" style="font-size:18px;color:var(--text-muted);flex-shrink:0"></iconify-icon>
+          <span id="edit-chi-date-display" style="color:var(--text-primary)">Chọn ngày</span>
+        </button>
+        <input type="hidden" id="edit-chi-date-value">
+      </div>
+      <div class="field">
+        <label>Số tiền <span style="color:var(--text-muted);font-weight:400">(âm = cộng lại quỹ)</span></label>
+        <input type="text" inputmode="numeric" class="input" id="edit-chi-amount" placeholder="VD: 500.000" autocomplete="off" data-money>
+      </div>
+      <div class="field">
+        <label>Danh mục</label>
+        <select class="input" id="edit-chi-cat">
+          <option value="Sân bóng">⚽ Sân bóng</option>
+          <option value="Thiết bị">🎽 Thiết bị</option>
+          <option value="Tiệc / Liên hoan">🎉 Tiệc / Liên hoan</option>
+          <option value="Y tế">🏥 Y tế</option>
+          <option value="Phần thưởng">🏆 Phần thưởng</option>
+          <option value="Khác">📦 Khác</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Nguồn quỹ</label>
+        <select class="input" id="edit-chi-fund">
+          <option value="thang">Quỹ tháng</option>
+          <option value="bia">Quỹ bia</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Ghi chú</label>
+        <input type="text" class="input" id="edit-chi-note" placeholder="Mô tả khoản chi">
+      </div>
+      <div style="display:flex;gap:12px;margin-top:4px">
+        <button class="btn btn-surface" onclick="closeEditChi()" style="justify-content:center;flex-shrink:0">Huỷ</button>
+        <button class="btn btn-gold w-full" id="btn-save-edit-chi" style="justify-content:center">
+          <iconify-icon icon="solar:check-circle-linear" style="font-size:18px"></iconify-icon>
+          Lưu thay đổi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
