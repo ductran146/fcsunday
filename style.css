@@ -205,7 +205,7 @@ img { max-width: 100%; display: block; }
   bottom: 0;
   left: 0;
   right: 0;
-  height: var(--bottom-nav-h);
+  height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
   background: var(--bg-surface);
   border-top: 1px solid var(--bg-border);
   z-index: 40;
@@ -215,7 +215,7 @@ img { max-width: 100%; display: block; }
 /* ── Responsive: mobile / PWA ── */
 @media (max-width: 767px) {
   .sidebar { display: none; }
-  .main-content { margin-left: 0; padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px)); }
+  .main-content { margin-left: 0; padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 8px); }
   .bottom-nav { display: flex; }
   .topbar {
     padding-top: env(safe-area-inset-top, 0px);
@@ -226,7 +226,7 @@ img { max-width: 100%; display: block; }
 
 @media (display-mode: standalone) {
   .sidebar { display: none; }
-  .main-content { margin-left: 0; padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px)); }
+  .main-content { margin-left: 0; padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 8px); }
   .bottom-nav { display: flex; }
   .topbar {
     padding-top: env(safe-area-inset-top, 0px);
@@ -965,10 +965,10 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 .topbar-logo { display: none; }
 
 @media (max-width: 767px) {
-  .topbar-logo { display: block; width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; border-radius: 6px; }
+  .topbar-logo { display: block; width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; border-radius: 6px; }
 }
 @media (display-mode: standalone) {
-  .topbar-logo { display: block; width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; border-radius: 6px; }
+  .topbar-logo { display: block; width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; border-radius: 6px; }
 }
 
 /* Avatar chữ Đ */
