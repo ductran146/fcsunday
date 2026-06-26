@@ -317,7 +317,8 @@
   }
 
   function renderOverview(S) {
-    const members   = (S.members || []).filter(m => m.status !== 'left');
+    const allMembers = (S.members || []);
+    const members   = allMembers.filter(m => m.status !== 'left');
     const activeM   = members.filter(m => m.status === 'active');
     const matches   = (S.matches || []).filter(m => {
       const yr = _year === BASE_YEAR
@@ -339,12 +340,12 @@
     const curMonthIdx = _year < new Date().getFullYear() ? 11
                       : _year > new Date().getFullYear() ? -1
                       : new Date().getMonth(); // 0-based
-    members.forEach(m => {
+    allMembers.forEach(m => {
       const key = _year === BASE_YEAR ? String(m.id) : `${m.id}_${_year}`;
       const arr = S.thuThang?.[key] || Array(12).fill(0);
       arr.forEach((v, mi) => {
-        if (v === 1) thuThangTotal += FEE;
-        // chỉ tính nợ cho tháng đã đến kỳ (mi <= curMonthIdx) và chưa đóng (v===0)
+        if (v === 1) thuThangTotal += FEE; // đã đóng: tính vào quỹ dù bất kể trạng thái
+        // chỉ tính nợ cho tháng đã đến kỳ, chưa đóng, và thành viên chưa nghỉ
         if (v === 0 && mi <= curMonthIdx && m.status !== 'left') thuThangNo += FEE;
       });
     });
