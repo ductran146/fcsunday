@@ -264,6 +264,53 @@
   });
 })();
 
+
+// ── Theme (Light / Dark) ───────────────────────────────────
+(function initTheme() {
+  const STORAGE_KEY = 'fc-sunday-theme';
+  const root = document.documentElement;
+
+  function getTheme() {
+    return localStorage.getItem(STORAGE_KEY) || 'dark';
+  }
+
+  function applyTheme(theme) {
+    if (theme === 'light') {
+      root.setAttribute('data-theme', 'light');
+    } else {
+      root.removeAttribute('data-theme');
+    }
+    // Update icon nếu button đã mount
+    const icon = document.getElementById('theme-toggle-icon');
+    if (icon) {
+      icon.setAttribute('icon', theme === 'light' ? 'solar:moon-linear' : 'solar:sun-linear');
+    }
+    // Update meta theme-color
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.content = theme === 'light' ? '#F2F1EE' : '#0C0C0F';
+    }
+  }
+
+  function toggleTheme() {
+    const current = getTheme();
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem(STORAGE_KEY, next);
+    applyTheme(next);
+  }
+
+  // Áp dụng ngay khi load (trước khi render)
+  applyTheme(getTheme());
+
+  // Wire button sau khi components ready
+  document.addEventListener('click', e => {
+    if (e.target.closest('#btn-theme-toggle')) toggleTheme();
+  });
+
+  window._toggleTheme = toggleTheme;
+  window._getTheme = getTheme;
+})();
+
 // ── Pull-to-refresh ────────────────────────────────────────
 (function initPullToRefresh() {
   const THRESHOLD  = 72;   // px kéo xuống để trigger

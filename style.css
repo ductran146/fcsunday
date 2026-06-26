@@ -2607,105 +2607,208 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
 /* ════════════════════════════════════════════
    Save Bar Component — dùng cho Thu tháng & Quỹ bia
    ════════════════════════════════════════════ */
-/* Save bar: ẩn khi có [hidden] attr */
+/* ════════════════════════════════════════
+   Save Bar — fixed bottom, mọi màn hình
+   ════════════════════════════════════════ */
 .save-bar[hidden] {
   display: none !important;
 }
 
-/* Mobile: fixed bar sát bottom nav */
-@media (max-width: 767px) {
+/* Tất cả màn hình: fixed bottom */
+.save-bar:not([hidden]) {
+  position: fixed;
+  left: 0;
+  right: 0;
+  /* Mobile: trên bottom-nav | Desktop/tablet: sát đáy trình duyệt */
+  bottom: calc(var(--bottom-nav-h, 0px) + env(safe-area-inset-bottom, 0px));
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(12,12,15,.55);
+  border-top: 1px solid rgba(255,255,255,.07);
+  box-shadow: 0 -8px 32px rgba(0,0,0,.45);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Desktop/tablet: bottom-nav ẩn → bottom = 0 */
+@media (min-width: 768px) {
   .save-bar:not([hidden]) {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
-    z-index: 90;
-    padding: 16px 16px;
-    background: rgba(12,12,15,.3);
-    box-shadow: 0 -8px 32px rgba(0,0,0,.4);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-
-  .save-bar__btn {
-    display: flex;
-    align-items: center;
+    bottom: 0;
     justify-content: center;
-    height: 40px;
-    min-height: 40px;
-    border-radius: var(--radius-lg);
-    border: none;
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: opacity .15s, transform .1s;
-  }
-  .save-bar__btn:active { transform: scale(.97); }
-
-  .save-bar__btn--cancel {
-    background: var(--bg-elevated);
-    color: var(--text-primary);
-    border: 1px solid var(--bg-stroke);
-  }
-  .save-bar__btn--cancel:hover { background: var(--bg-stroke); }
-
-  .save-bar__btn--save {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-end));
-    color: #1a1206;
-  }
-  .save-bar__btn--save:hover { opacity: .9; }
-
-  .page:has(.save-bar:not([hidden])) {
-    padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 80px);
-  }
-
-  .thu-thang-toast {
-    bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 86px);
+    padding: 12px 32px;
+    gap: 12px;
   }
 }
 
-/* Desktop: inline trong flow */
-@media (min-width: 768px) {
-  .save-bar:not([hidden]) {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--space-3);
-    margin: 0 0 var(--space-4);
-    padding: var(--space-3) var(--space-4);
-    border: 1px solid rgba(255,192,46,.2);
-    border-radius: var(--radius-lg);
-    background: rgba(255,192,46,.08);
-  }
+/* Buttons */
+.save-bar__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 24px;
+  border-radius: var(--radius-lg);
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .15s, transform .1s;
+  white-space: nowrap;
+}
+.save-bar__btn:active { transform: scale(.97); }
 
+/* Mobile: buttons chia đôi full width */
+@media (max-width: 767px) {
   .save-bar__btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 40px;
-    min-height: 40px;
-    padding: 0 20px;
-    border-radius: var(--radius-lg);
-    border: none;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    min-width: 104px;
-    transition: opacity .15s, transform .1s;
+    flex: 1;
+    font-size: 15px;
   }
-  .save-bar__btn--cancel {
-    background: var(--bg-elevated);
-    color: var(--text-primary);
-    border: 1px solid var(--bg-stroke);
+}
+
+.save-bar__btn--cancel {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--bg-stroke);
+  min-width: 96px;
+}
+.save-bar__btn--cancel:hover { background: var(--bg-stroke); }
+
+.save-bar__btn--save {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-end));
+  color: #1a1206;
+  min-width: 120px;
+}
+.save-bar__btn--save:hover { opacity: .9; }
+
+/* Đẩy nội dung trang lên khi bar hiện */
+@media (max-width: 767px) {
+  .page:has(.save-bar:not([hidden])) {
+    padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 76px);
   }
-  .save-bar__btn--save {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-end));
-    color: #1a1206;
+  .thu-thang-toast {
+    bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 72px);
   }
-  .save-bar__btn--save:hover { opacity: .9; }
+}
+@media (min-width: 768px) {
+  .page:has(.save-bar:not([hidden])) {
+    padding-bottom: 80px;
+  }
+}
+
+/* ════════════════════════════════════════
+   Light Mode Token Override
+   Apply via: <html data-theme="light">
+   ════════════════════════════════════════ */
+[data-theme="light"] {
+  /* Surface / Background */
+  --bg-base:       #F2F1EE;
+  --bg-surface:    #FFFFFF;
+  --bg-elevated:   #F7F6F3;
+  --bg-border:     #E2E0DB;
+  --bg-stroke:     #CCCAC4;
+  --bg-hover:      #ECEAE6;
+
+  /* Text */
+  --text-primary:   #181612;
+  --text-secondary: #4A4844;
+  --text-muted:     #6E6C68;
+  --text-disabled:  #A8A6A2;
+
+  /* Amount */
+  --color-amount:   #2A2824;
+
+  /* Shadow — nhẹ hơn trên nền sáng */
+  --shadow-sm:  0 2px 8px rgba(0,0,0,.08);
+  --shadow-md:  0 4px 20px rgba(0,0,0,.12);
+  --shadow-glow: 0 8px 32px rgba(224,57,44,.15);
+  --shadow-gold: 0 4px 20px rgba(255,192,46,.2);
+}
+
+/* Các element dùng màu cố định cần override riêng */
+[data-theme="light"] body {
+  background: var(--bg-base);
+}
+
+[data-theme="light"] .topbar {
+  border-bottom: 1px solid var(--bg-border);
+  box-shadow: 0 1px 8px rgba(0,0,0,.06);
+}
+
+[data-theme="light"] .bottom-nav {
+  border-top: 1px solid var(--bg-border);
+  box-shadow: 0 -1px 8px rgba(0,0,0,.06);
+}
+
+[data-theme="light"] .sidebar {
+  border-right: 1px solid var(--bg-border);
+}
+
+[data-theme="light"] .kpi-card {
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+[data-theme="light"] .card,
+[data-theme="light"] .card-no-border {
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+[data-theme="light"] .input {
+  background: var(--bg-elevated);
+  border-color: var(--bg-stroke);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .input:focus {
+  border-color: var(--color-accent);
+}
+
+[data-theme="light"] .member-card,
+[data-theme="light"] .member-swipe-card {
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+[data-theme="light"] .save-bar:not([hidden]) {
+  background: rgba(242,241,238,.8);
+  border-top: 1px solid var(--bg-border);
+  box-shadow: 0 -4px 20px rgba(0,0,0,.08);
+}
+
+[data-theme="light"] .btn-surface {
+  background: var(--bg-elevated);
+  border-color: var(--bg-stroke);
+}
+
+[data-theme="light"] .btn-ghost {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .modal,
+[data-theme="light"] .sheet {
+  box-shadow: 0 8px 40px rgba(0,0,0,.15);
+}
+
+/* Theme toggle button */
+.btn-theme-toggle {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: 20px;
+  transition: background .15s, color .15s;
+}
+.btn-theme-toggle:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
