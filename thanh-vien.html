@@ -582,22 +582,24 @@
           const prevStatus = m.status;
           m.name = name; m.phone = phone; m.status = status; m.note = note;
 
-          // Khi chuyển sang "đã nghỉ" → xoá toàn bộ nợ
+          // Khi chuyển sang "đã nghỉ" → xử lý nợ
           if (status === 'left' && prevStatus !== 'left') {
-            // 1. Quỹ tháng: đánh dấu tất cả tháng chưa đóng = đã đóng (1)
+            // 1. Quỹ tháng: tháng đã đóng (1) giữ nguyên, tháng chưa đóng (0) → miễn đóng (2)
             if (!_S.thuThang) _S.thuThang = {};
             const yearKey = String(m.id); // BASE_YEAR
             const arr = (_S.thuThang[yearKey] || Array(12).fill(0)).slice(0, 12);
             while (arr.length < 12) arr.push(0);
-            _S.thuThang[yearKey] = arr.map(v => v === 0 ? 1 : v);
+            _S.thuThang[yearKey] = arr.map(v => v === 0 ? 2 : v);
 
-            // 2. Quỹ bia: đánh dấu tất cả trận thua chưa trả = đã trả
+            // 2. Quỹ bia: xoá thành viên khỏi danh sách losers của các trận chưa trả
+            // → không thua = không ảnh hưởng quỹ bia đã thu
             if (_S.matches) {
               _S.matches.forEach(match => {
                 if (!match.losers) return;
-                match.losers.forEach(l => {
-                  if (l.memberId == m.id && !l.paid) l.paid = true;
-                });
+                const loser = match.losers.find(l => l.memberId == m.id);
+                if (loser && !loser.paid) {
+                  match.losers = match.losers.filter(l => l.memberId != m.id);
+                }
               });
             }
           }
