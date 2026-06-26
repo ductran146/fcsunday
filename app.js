@@ -302,11 +302,6 @@
   // Áp dụng ngay khi load (trước khi render)
   applyTheme(getTheme());
 
-  // Wire button sau khi components ready
-  document.addEventListener('click', e => {
-    if (e.target.closest('#btn-theme-toggle')) toggleTheme();
-  });
-
   window._toggleTheme = toggleTheme;
   window._getTheme = getTheme;
 })();
