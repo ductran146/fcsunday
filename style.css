@@ -410,7 +410,7 @@ img { max-width: 100%; display: block; }
 .btn-icon.btn-h32 { width: 32px; height: 32px; min-height: 32px; }
 
 /* Legacy aliases */
-.btn-sm { height: 32px; min-height: 32px; padding: 0 14px; font-size: 12px; border-radius: var(--radius-md); }
+.btn-sm { height: 32px; min-height: 32px; padding: 0 10px; font-size: 12px; border-radius: var(--radius-md); }
 .btn-lg { height: 52px; min-height: 52px; padding: 0 28px; font-size: 16px; }
 
 .btn:disabled, .btn[disabled] {
@@ -965,10 +965,10 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 .topbar-logo { display: none; }
 
 @media (max-width: 767px) {
-  .topbar-logo { display: block; width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; border-radius: 6px; }
+  .topbar-logo { display: block; width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; border-radius: 6px; }
 }
 @media (display-mode: standalone) {
-  .topbar-logo { display: block; width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; border-radius: 6px; }
+  .topbar-logo { display: block; width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; border-radius: 6px; }
 }
 
 /* Avatar chữ Đ */
@@ -2645,4 +2645,40 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
   display: flex; align-items: center; gap: var(--space-4);
   margin-top: var(--space-6); padding-top: var(--space-5);
   border-top: 1px solid var(--bg-border);
+}
+
+/* ── Pull-to-refresh indicator ── */
+#ptr-indicator {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(-48px);
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+.ptr-inner {
+  width: 40px; height: 40px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-stroke);
+  border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,.4);
+  margin-top: 12px;
+}
+.ptr-spinner {
+  width: 20px; height: 20px;
+  color: var(--color-primary);
+  transition: stroke-dashoffset .1s linear;
+}
+.ptr-loading .ptr-spinner {
+  animation: ptr-spin .7s linear infinite;
+}
+@keyframes ptr-spin {
+  to { transform: rotate(360deg); transform-origin: 12px 12px; }
+}
+.ptr-triggered .ptr-inner {
+  border-color: var(--color-primary);
+  background: rgba(224,57,44,.08);
 }

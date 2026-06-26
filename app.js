@@ -263,3 +263,100 @@
     document.querySelectorAll('[data-money]').forEach(attachMoneyInput);
   });
 })();
+
+// ── Pull-to-refresh ────────────────────────────────────────
+(function initPullToRefresh() {
+  const THRESHOLD  = 72;   // px kéo xuống để trigger
+  const MAX_PULL   = 100;  // px tối đa hiệu ứng
+  let startY = 0, pulling = false, triggered = false;
+
+  // Tạo indicator DOM
+  const indicator = document.createElement('div');
+  indicator.id = 'ptr-indicator';
+  indicator.innerHTML = `
+    <div class="ptr-inner">
+      <svg class="ptr-spinner" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+          stroke-dasharray="28.27" stroke-dashoffset="28.27"/>
+      </svg>
+    </div>`;
+  document.body.prepend(indicator);
+
+  const page = () => document.querySelector('.main-content') || document.body;
+
+  function setProgress(ratio) {
+    const deg = ratio * 360;
+    const offset = 28.27 * (1 - Math.min(ratio, 1));
+    const circle = indicator.querySelector('circle');
+    if (circle) {
+      circle.style.strokeDashoffset = offset;
+      circle.style.transform = `rotate(${deg * 2}deg)`;
+      circle.style.transformOrigin = '12px 12px';
+    }
+    indicator.style.setProperty('--ptr-progress', Math.min(ratio, 1));
+    const translateY = Math.min(ratio * THRESHOLD, MAX_PULL);
+    indicator.style.transform = `translateX(-50%) translateY(${translateY - 48}px)`;
+    indicator.style.opacity = Math.min(ratio * 2, 1);
+  }
+
+  function trigger() {
+    triggered = true;
+    indicator.classList.add('ptr-loading');
+    // Spin animation
+    const circle = indicator.querySelector('circle');
+    if (circle) circle.style.strokeDashoffset = '8';
+    // Gọi refresh
+    Promise.resolve(window._refreshData?.()).finally(() => {
+      setTimeout(reset, 400);
+    });
+  }
+
+  function reset() {
+    triggered = false;
+    pulling = false;
+    indicator.classList.remove('ptr-loading', 'ptr-triggered');
+    indicator.style.transform = 'translateX(-50%) translateY(-48px)';
+    indicator.style.opacity = '0';
+    page().style.transform = '';
+    page().style.transition = 'transform .25s ease';
+    setTimeout(() => { page().style.transition = ''; }, 260);
+  }
+
+  document.addEventListener('touchstart', e => {
+    // Chỉ kéo khi đang ở top của trang, không có modal đang mở
+    const scrollTop = page().scrollTop || window.scrollY;
+    if (scrollTop > 2) return;
+    if (document.querySelector('.modal-backdrop[style*="flex"], .sheet-backdrop[style*="flex"]')) return;
+    startY = e.touches[0].clientY;
+    pulling = true;
+    triggered = false;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!pulling || triggered) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy <= 0) { pulling = false; return; }
+    // Damping: kéo càng xa càng chậm
+    const pull = Math.pow(dy, 0.75);
+    const ratio = pull / THRESHOLD;
+    setProgress(ratio);
+    // Đẩy content xuống theo
+    const shift = Math.min(pull * 0.4, 32);
+    page().style.transform = `translateY(${shift}px)`;
+    page().style.transition = 'none';
+    if (ratio >= 1 && !indicator.classList.contains('ptr-triggered')) {
+      indicator.classList.add('ptr-triggered');
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    if (!pulling) return;
+    const isTriggered = indicator.classList.contains('ptr-triggered');
+    if (isTriggered) {
+      trigger();
+    } else {
+      reset();
+    }
+  });
+})();
+
