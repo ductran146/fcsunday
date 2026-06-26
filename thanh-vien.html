@@ -40,6 +40,14 @@
           <div class="kpi-card__label">Chưa đóng tháng</div>
           <div class="kpi-card__value" id="kpi-chua-dong">0</div>
         </div>
+        <div class="kpi-card kpi-card--red">
+          <div class="kpi-card__label">Tổng nợ tháng</div>
+          <div class="kpi-card__value" id="kpi-no-thang">0</div>
+        </div>
+        <div class="kpi-card kpi-card--red">
+          <div class="kpi-card__label">Tổng nợ bia</div>
+          <div class="kpi-card__value" id="kpi-no-bia">0</div>
+        </div>
       </div>
 
       <!-- Filter tabs -->
@@ -256,6 +264,8 @@
     });
     document.getElementById('kpi-active').textContent    = all.filter(m=>m.status==='active').length;
     document.getElementById('kpi-chua-dong').textContent = chuaDongCount;
+    document.getElementById('kpi-no-thang').textContent  = fmt(noThangTotal);
+    document.getElementById('kpi-no-bia').textContent    = fmt(noBiaTotal);
 
     // Filter + search + sort
     const normalizedQuery = normalizeText(_query);
@@ -791,6 +801,14 @@
     btn.disabled = false;
     btn.innerHTML = '<iconify-icon icon="solar:check-circle-linear" style="font-size:18px"></iconify-icon>Xác nhận thanh toán';
   });
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .catch(err => console.warn('SW register failed:', err));
+    });
+  }
 </script>
 </body>
 </html>

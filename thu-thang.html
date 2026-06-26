@@ -299,5 +299,13 @@
   };
   window._onAuthChange = function() { if(_S) renderTable(_S); };
 </script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .catch(err => console.warn('SW register failed:', err));
+    });
+  }
+</script>
 </body>
 </html>
