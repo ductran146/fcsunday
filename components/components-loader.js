@@ -183,6 +183,26 @@
     }
   }
 
+  // ── Theme toggle button ──────────────────────────────────────
+  function initThemeBtn() {
+    const btn = document.getElementById('btn-theme-toggle');
+    const icon = document.getElementById('theme-toggle-icon');
+    if (!btn) return;
+
+    // Sync icon với theme hiện tại
+    function syncIcon() {
+      const isDark = !document.documentElement.hasAttribute('data-theme');
+      if (icon) icon.setAttribute('icon', isDark ? 'solar:sun-linear' : 'solar:moon-linear');
+      btn.title = isDark ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối';
+    }
+    syncIcon();
+
+    btn.addEventListener('click', () => {
+      window._toggleTheme?.();
+      syncIcon();
+    });
+  }
+
   // ── Login modal logic ──────────────────────────────────────
   function initLoginModal() {
     const modal     = document.getElementById('login-modal');
@@ -299,6 +319,7 @@
     applyAuthCache(); // Áp dụng cached auth state ngay — không chờ Firebase
     showIOSHint();
     initPWAHeaderBtn();
+    initThemeBtn();
     initLoginModal();
     initInstallBtn();
 
