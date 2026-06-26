@@ -20,6 +20,44 @@
     .summary-table-wrap { overflow-x: auto; border-top: 1px solid var(--bg-border); }
     .fc-table td.month-col { font-weight: 700; }
     .fc-table td.total-row { font-weight: 800; background: var(--bg-elevated) !important; }
+
+    .hero-extra-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+      margin-top: var(--space-4);
+      padding-top: var(--space-4);
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+    .hero-extra-stat {
+      min-width: 0;
+    }
+    .hero-extra-stat__label {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.35;
+      margin-bottom: var(--space-1);
+    }
+    .hero-extra-stat__value {
+      color: var(--text-primary);
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    @media (max-width: 480px) {
+      .hero-extra-stats {
+        gap: var(--space-3);
+      }
+      .hero-extra-stat__label {
+        font-size: 11px;
+      }
+      .hero-extra-stat__value {
+        font-size: 20px;
+      }
+    }
   </style>
 </head>
 <body data-active="index">
@@ -77,6 +115,16 @@
                 <span id="fund-bia-no" style="color:var(--color-accent-light)">0</span>
               </div>
             </div>
+          </div>
+        </div>
+        <div class="hero-extra-stats" aria-label="Thông tin thu chi bổ sung">
+          <div class="hero-extra-stat">
+            <div class="hero-extra-stat__label">Thu thêm (lính đánh thuê)</div>
+            <div class="hero-extra-stat__value" id="hero-thu-them">0</div>
+          </div>
+          <div class="hero-extra-stat">
+            <div class="hero-extra-stat__label">Tổng chi</div>
+            <div class="hero-extra-stat__value" id="hero-tong-chi">0</div>
           </div>
         </div>
       </div>
@@ -243,6 +291,33 @@
       .toLowerCase();
   }
 
+  function isOpeningBalanceEntry(c) {
+    const text = normalizeVNText([c.cat, c.note, c.title, c.desc].filter(Boolean).join(' '));
+    return text.includes('tien dau ky') || text.includes('so du dau ky') || text.includes('dau ky');
+  }
+  function getLegacyOpeningBalance(S, fund) {
+    return (S.chiTieu || []).reduce((sum, c) => {
+      const cFund = (!c.fund || c.fund === 'bong') ? 'thang' : c.fund;
+      if (cFund !== fund || !isOpeningBalanceEntry(c)) return sum;
+      // Công thức version 1: số dư đầu kỳ là khoản cộng vào Thu.
+      // Dữ liệu cũ có thể lưu âm/dương khác nhau, nên quy về giá trị dương.
+      return sum + Math.abs(Number(c.amount || 0));
+    }, 0);
+  }
+  function getOpeningBalance(S, fund) {
+    const legacy = getLegacyOpeningBalance(S, fund);
+    const explicit = S?.settings?.openingBalances?.[fund];
+    const hasExplicit = explicit !== undefined && explicit !== null && explicit !== '';
+    const explicitValue = Number(explicit) || 0;
+
+    // Nếu người quản lý đã nhập số dư khác 0 ở Cài đặt thì dùng số đó.
+    // Nếu dữ liệu settings đang là 0 mặc định nhưng còn dòng đồng bộ đầu kỳ cũ,
+    // vẫn lấy theo công thức version 1 để tránh mất số dư đầu kỳ.
+    if (hasExplicit && explicitValue !== 0) return explicitValue;
+    if (legacy !== 0) return legacy;
+    return explicitValue;
+  }
+
   function renderOverview(S) {
     const members   = (S.members || []).filter(m => m.status !== 'left');
     const activeM   = members.filter(m => m.status === 'active');
@@ -252,10 +327,13 @@
         : m.year === _year;
       return yr;
     });
-    const chiTieu   = (S.chiTieu || []).filter(c => {
+    const chiTieuAll = (S.chiTieu || []).filter(c => {
       const d = c.date?.substring(0,4);
       return String(_year) === d;
     });
+    const chiTieu = chiTieuAll.filter(c => !isOpeningBalanceEntry(c));
+    const openingThang = getOpeningBalance(S, 'thang');
+    const openingBia = getOpeningBalance(S, 'bia');
 
     // Thu tháng
     let thuThangTotal = 0;
@@ -282,16 +360,35 @@
       });
       thuBiaThuThem += (match.thuThem || 0);
     });
-    const thuBiaTotal = thuBiaThu + thuBiaThuThem;
+    // Các khoản thu nhập nhập trong trang Chi tiêu đang lưu amount âm
+    // để hiển thị dạng +500.000 / +1.000.000.
+    // Khi tính quỹ, đưa các khoản này vào Thu, không trừ vào Chi.
+    const incomeThangFromExpenses = chiTieu
+      .filter(c => (!c.fund || c.fund === 'thang') && Number(c.amount || 0) < 0)
+      .reduce((s,c) => s + Math.abs(Number(c.amount || 0)), 0);
+    const incomeBiaFromExpenses = chiTieu
+      .filter(c => c.fund === 'bia' && Number(c.amount || 0) < 0)
+      .reduce((s,c) => s + Math.abs(Number(c.amount || 0)), 0);
 
-    // Chi — khoản không có fund mặc định thuộc quỹ tháng
-    const chiThang = chiTieu.filter(c => !c.fund || c.fund === 'thang').reduce((s,c) => s + (c.amount||0), 0);
-    const chiBia   = chiTieu.filter(c => c.fund === 'bia').reduce((s,c) => s + (c.amount||0), 0);
+    const thuBiaTotal = thuBiaThu + thuBiaThuThem + incomeBiaFromExpenses;
 
-    const tonThang = thuThangTotal - chiThang;
-    const tonBia   = thuBiaTotal - chiBia;
+    // Chi — chỉ tính khoản chi thực tế amount dương. Khoản thu/ủng hộ amount âm được cộng vào Thu ở trên.
+    // Khoản không có fund mặc định thuộc quỹ tháng.
+    const chiThang = chiTieu
+      .filter(c => (!c.fund || c.fund === 'thang') && Number(c.amount || 0) > 0)
+      .reduce((s,c) => s + Number(c.amount || 0), 0);
+    const chiBia = chiTieu
+      .filter(c => c.fund === 'bia' && Number(c.amount || 0) > 0)
+      .reduce((s,c) => s + Number(c.amount || 0), 0);
+
+    // Thu hiển thị = số dư đầu kỳ + quỹ đã đóng/đã thu + khoản thu/ủng hộ
+    const thuThangDisplay = openingThang + thuThangTotal + incomeThangFromExpenses;
+    const thuBiaDisplay   = openingBia + thuBiaTotal;
+
+    const tonThang = thuThangDisplay - chiThang;
+    const tonBia   = thuBiaDisplay - chiBia;
     const tonTotal = tonThang + tonBia;
-    const thuTotal = thuThangTotal + thuBiaTotal;
+    const thuTotal = thuThangDisplay + thuBiaDisplay;
 
     // Tiền sân gần nhất: lấy từ chi tiêu quỹ bóng/quỹ tháng có nội dung liên quan đến sân bóng
     const sanExpenses = chiTieu
@@ -308,13 +405,15 @@
     document.getElementById('hero-total').innerHTML =
       new Intl.NumberFormat('vi-VN').format(Math.round(tonTotal || 0)) ;
     document.getElementById('fund-thang-total').textContent  = fmtShort(tonThang);
-    document.getElementById('fund-thang-thu').textContent    = fmtShort(thuThangTotal);
+    document.getElementById('fund-thang-thu').textContent    = fmtShort(thuThangDisplay);
     document.getElementById('fund-thang-chi').textContent    = fmtShort(chiThang);
     document.getElementById('fund-thang-no').textContent     = fmtShort(thuThangNo);
     document.getElementById('fund-bia-total').textContent    = fmtShort(tonBia);
-    document.getElementById('fund-bia-thu').textContent      = fmtShort(thuBiaTotal);
+    document.getElementById('fund-bia-thu').textContent      = fmtShort(thuBiaDisplay);
     document.getElementById('fund-bia-chi').textContent      = fmtShort(chiBia);
     document.getElementById('fund-bia-no').textContent       = fmtShort(noBia);
+    document.getElementById('hero-thu-them').textContent     = fmtShort(thuBiaThuThem);
+    document.getElementById('hero-tong-chi').textContent     = fmtShort(chiThang + chiBia);
 
     // KPI
     document.getElementById('kpi-thu').textContent          = fmtShort(thuTotal);
@@ -380,7 +479,7 @@
 
     // Summary table
     document.getElementById('summary-year').textContent = _year;
-    let runTon = 0;
+    let runTon = openingThang + openingBia;
     const tbody = document.getElementById('summary-tbody');
     tbody.innerHTML = MONTHS.map((mn, mi) => {
       // Thu tháng Mi

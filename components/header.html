@@ -1,38 +1,35 @@
 <!-- ========================
   FC Sunday V2 — Header Component
-  Usage: <div data-component="header" data-title="Tên trang"></div>
 ======================== -->
 <div class="topbar">
   <!-- Logo: chỉ hiện mobile/PWA -->
-  <img src="icon-192.png" alt="FC Sunday" class="topbar-logo" style="width:32px;height:32px;object-fit:contain;flex-shrink:0;border-radius:6px">
+  <img src="icon-192.png" alt="FC Sunday" class="topbar-logo">
 
-  <!-- Title -->
+  <!-- Title: bold -->
   <span class="topbar-title" id="topbar-title">FC Sunday</span>
 
-  <!-- Spacer -->
+  <!-- Spacer đẩy actions sang phải -->
   <div style="flex:1"></div>
 
   <!-- Actions -->
   <div class="topbar-actions">
-
-    <!-- Quick view (share) — luôn hiện -->
-    <a href="share.html" target="_blank" class="btn btn-icon btn-ghost" title="Xem tổng quỹ nhanh" aria-label="Xem tổng quỹ nhanh">
+    <!-- Quick view -->
+    <a href="share.html" target="_blank" class="btn btn-icon btn-ghost" title="Xem tổng quỹ nhanh">
       <iconify-icon icon="solar:eye-linear" style="font-size:22px"></iconify-icon>
     </a>
 
-    <!-- Chưa login: Login button -->
+    <!-- Chưa login -->
     <button class="btn btn-outline btn-sm" id="btn-login" style="display:inline-flex;gap:6px;align-items:center">
       <iconify-icon icon="solar:login-2-linear" style="font-size:16px"></iconify-icon>
       Đăng nhập
     </button>
 
-    <!-- Đã login: Setting icon -->
-    <button class="btn btn-icon btn-ghost auth-only" id="btn-setting" title="Cài đặt" style="display:none">
+    <!-- Đã login: Setting -->
+    <a href="settings.html" class="btn btn-icon btn-ghost auth-only" id="btn-setting" title="Cài đặt" style="display:none">
       <iconify-icon icon="solar:settings-linear" style="font-size:22px"></iconify-icon>
-    </button>
+    </a>
 
-    <!-- Đã login: Avatar chữ Đ (bấm → logout) -->
+    <!-- Đã login: Avatar -->
     <button class="topbar-avatar auth-only" id="btn-avatar" title="Đăng xuất" style="display:none">Đ</button>
-
   </div>
 </div>

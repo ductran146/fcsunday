@@ -4,6 +4,48 @@
    Font: Inter (default 14px / 400)
    ============================================================ */
 
+/* ── TossFace Emoji Font ── */
+@font-face {
+  font-family: 'TossFace';
+  src: url('TossFaceFontWeb.otf') format('opentype');
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+/* Override emoji ranges trong Inter stack → dùng TossFace */
+@font-face {
+  font-family: 'Inter';
+  src: url('TossFaceFontWeb.otf') format('opentype');
+  font-display: swap;
+  unicode-range:
+    U+2600-26FF, U+2700-27BF,
+    U+1F000-1F02F, U+1F0A0-1F0FF,
+    U+1F300-1F5FF, U+1F600-1F64F,
+    U+1F680-1F6FF, U+1F700-1F77F,
+    U+1F780-1F7FF, U+1F800-1F8FF,
+    U+1F900-1F9FF, U+1FA00-1FA6F,
+    U+1FA70-1FAFF, U+2194-2199,
+    U+2328, U+23CF, U+23E9-23F3,
+    U+23F8-23FA, U+25AA-25AB,
+    U+25B6, U+25C0, U+25FB-25FE,
+    U+2614-2615, U+2648-2653,
+    U+267F, U+2693, U+26A1,
+    U+26AA-26AB, U+26BD-26BE,
+    U+26C4-26C5, U+26D4, U+26EA,
+    U+26F2-26F3, U+26F5, U+26FA,
+    U+26FD, U+2702, U+2705,
+    U+2708-270D, U+270F, U+2712,
+    U+2714, U+2716, U+271D, U+2721,
+    U+2728, U+2733-2734, U+2744,
+    U+2747, U+274C, U+274E,
+    U+2753-2755, U+2757,
+    U+2763-2764, U+2795-2797,
+    U+27A1, U+27B0, U+27BF,
+    U+2934-2935, U+2B05-2B07,
+    U+2B1B-2B1C, U+2B50, U+2B55,
+    U+3030, U+303D, U+3297, U+3299;
+}
+/* Helper class */
+.tf { font-family: 'TossFace', sans-serif; }
+
 /* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
@@ -271,7 +313,7 @@ img { max-width: 100%; display: block; }
   background: var(--bg-elevated);
   border: 1px solid var(--bg-border);
   border-radius: var(--radius-xl);
-  padding: var(--space-4);
+  padding: var(--space-3) var(--space-4);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -633,7 +675,7 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 /* ── Hero Fund ── */
 .hero-fund {
   background: radial-gradient(ellipse at 60% -20%, rgba(224,57,44,.2) 0%, transparent 65%),
-              radial-gradient(ellipse at 0% 100%, rgba(215,96,268,.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 0% 100%, rgba(224,57,44,.08) 0%, transparent 35%),
               var(--bg-surface);
   border: 1px solid var(--bg-stroke);
   border-radius: var(--radius-xl);
@@ -923,10 +965,10 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 .topbar-logo { display: none; }
 
 @media (max-width: 767px) {
-  .topbar-logo { display: block; }
+  .topbar-logo { display: block; width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; border-radius: 6px; }
 }
 @media (display-mode: standalone) {
-  .topbar-logo { display: block; }
+  .topbar-logo { display: block; width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; border-radius: 6px; }
 }
 
 /* Avatar chữ Đ */
@@ -944,7 +986,8 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 }
 .topbar-avatar:hover  { opacity: .85; }
 .topbar-avatar:active { transform: scale(.93); }
-.topbar-actions { display: flex; align-items: center; gap: var(--space-2); }
+.topbar-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+.topbar-title { font-size: 16px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; }
 
 /* ── Year selector ── */
 .year-selector {
@@ -2516,4 +2559,90 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
     padding: 8px 0;
     font-size: 12px;
   }
+}
+
+/* ── Settings Page ── */
+.settings-page { max-width: var(--max-width); }
+
+.settings-hero {
+  display: flex; align-items: center; gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.settings-hero__icon {
+  width: 48px; height: 48px; border-radius: var(--radius-lg);
+  background: rgba(224,57,44,.12); border: 1px solid rgba(224,57,44,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; color: var(--color-accent-light); flex-shrink: 0;
+}
+
+/* Card section */
+.settings-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+.settings-card__header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: var(--space-3); margin-bottom: var(--space-5);
+}
+
+/* Year badge */
+.settings-badge {
+  display: inline-flex; align-items: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-stroke);
+  border-radius: var(--radius-full);
+  padding: 4px 12px;
+  font-size: 12px; font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap; flex-shrink: 0;
+}
+
+/* Form grid */
+.settings-form-grid {
+  display: flex; flex-direction: column; gap: var(--space-5);
+}
+
+/* Money input wrapper */
+.settings-money-field { position: relative; }
+.settings-money-field .input {
+  font-size: 20px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding-left: var(--space-5);
+  color: var(--text-primary);
+}
+.settings-money-field .input:focus { border-color: var(--color-primary); }
+
+/* Hint text */
+.field-hint {
+  font-size: 12px; color: var(--text-muted);
+  line-height: 1.5; margin-top: var(--space-2);
+}
+
+/* Preview total */
+.settings-preview {
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  margin-top: var(--space-5);
+}
+.settings-preview > div {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 14px; color: var(--text-secondary);
+}
+.settings-preview strong {
+  font-size: 18px; font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-success);
+}
+.settings-preview strong.is-negative { color: var(--color-accent-light); }
+
+/* Actions */
+.settings-actions {
+  display: flex; align-items: center; gap: var(--space-4);
+  margin-top: var(--space-6); padding-top: var(--space-5);
+  border-top: 1px solid var(--bg-border);
 }

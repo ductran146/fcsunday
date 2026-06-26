@@ -92,7 +92,12 @@
   }
 
   // ── Update auth UI ─────────────────────────────────────────
+  const AUTH_CACHE_KEY = 'fc_auth_state';
+
   window.updateAuthUI = function (isLoggedIn) {
+    // Lưu trạng thái vào localStorage để dùng lần sau
+    try { localStorage.setItem(AUTH_CACHE_KEY, isLoggedIn ? '1' : '0'); } catch(e) {}
+
     const btnLogin   = document.getElementById('btn-login');
     const btnSetting = document.getElementById('btn-setting');
     const btnAvatar  = document.getElementById('btn-avatar');
@@ -107,6 +112,14 @@
       }
     });
   };
+
+  // Áp dụng trạng thái cached ngay khi components load xong (trước Firebase confirm)
+  function applyAuthCache() {
+    try {
+      const cached = localStorage.getItem(AUTH_CACHE_KEY);
+      if (cached !== null) window.updateAuthUI(cached === '1');
+    } catch(e) {}
+  }
 
   // ── Install prompt (Android) ───────────────────────────────
   let _deferredPrompt = null;
@@ -241,12 +254,11 @@
     await Promise.all(Array.from(placeholders).map(loadComponent));
 
     // After injection — initialize behaviors
-    const titleEl = document.querySelector('[data-title]');
-    const titleVal = titleEl?.dataset.title;
-    if (titleVal) updateTopbarTitle(titleVal);
+    // Không đổi title header — luôn hiện "FC Sunday"
 
     updateActiveNav(bodyActive);
     updateSidebarYear();
+    applyAuthCache(); // Áp dụng cached auth state ngay — không chờ Firebase
     showIOSHint();
     initLoginModal();
     initInstallBtn();

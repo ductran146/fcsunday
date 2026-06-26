@@ -47,26 +47,44 @@
     .chi-card__note { font-size: 12px; color: var(--text-secondary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .chi-card__amount { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; flex-shrink: 0; }
 
-    /* Swipe action (delete) */
+    /* Swipe actions: edit + delete */
     .chi-swipe-actions {
       position: absolute; inset: 0 0 0 auto; z-index: 1;
-      display: flex; align-items: stretch; width: 72px;
+      display: flex; align-items: center; justify-content: flex-end;
+      gap: 20px; width: 128px; padding-left: 20px;
+      pointer-events: auto;
+    }
+    .chi-action-btn {
+      width: 44px; height: 44px; min-width: 44px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: none; cursor: pointer; border-radius: var(--radius-lg);
+      font-size: 20px; transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+    .chi-action-btn:active { transform: scale(.96); }
+    .chi-swipe-edit {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-end));
+      color: #1a1206;
     }
     .chi-swipe-del {
-      width: 100%; display: flex; align-items: center; justify-content: center;
-      background: var(--color-accent); color: #fff;
-      border: none; cursor: pointer; border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
-      font-size: 20px;
+      background: rgba(224,57,44,.16); color: var(--color-accent-light);
+      border: 1px solid rgba(224,57,44,.34);
     }
+    .chi-action-text { display: none; }
     @media (max-width: 767px) {
       .chi-swipe-row { touch-action: pan-y pinch-zoom; user-select: none; -webkit-user-select: none; }
       .chi-swipe-card { touch-action: pan-y pinch-zoom; }
-      .chi-swipe-row.is-open .chi-swipe-card { transform: translate3d(-72px,0,0); }
+      .chi-swipe-row.is-open .chi-swipe-card { transform: translate3d(-128px,0,0); }
     }
     @media (min-width: 768px) {
-      .chi-swipe-row { overflow: visible; }
-      .chi-swipe-actions { display: none; }
-      .chi-del-desktop { display: inline-flex !important; }
+      .chi-swipe-row { overflow: visible; display: flex; align-items: stretch; gap: 12px; }
+      .chi-swipe-card { order: 1; flex: 1; }
+      .chi-swipe-actions {
+        order: 2; position: static; inset: auto; z-index: auto;
+        width: auto; padding-left: 0; gap: 8px; flex-shrink: 0;
+      }
+      .chi-action-btn { width: auto; min-width: 112px; height: 44px; padding: 0 14px; gap: 8px; font-size: 14px; font-weight: 700; }
+      .chi-action-btn iconify-icon { font-size: 18px; }
+      .chi-action-text { display: inline; }
     }
   </style>
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>
@@ -155,8 +173,8 @@
       <!-- Tab: Thêm khoản (admin only) -->
       <div id="panel-add" style="display:none">
         <div class="card">
-          <div class="section-overline" style="margin-bottom:4px">Thêm khoản</div>
-          <div class="section-title" style="font-size:16px;margin-bottom:16px">Ghi nhận chi tiêu</div>
+          <div class="section-overline" id="chi-form-overline" style="margin-bottom:4px">Thêm khoản</div>
+          <div class="section-title" id="chi-form-title" style="font-size:16px;margin-bottom:16px">Ghi nhận chi tiêu</div>
           <div style="display:flex;flex-direction:column;gap:14px">
             <div class="field">
               <label>Ngày chi</label>
@@ -194,10 +212,13 @@
               <label>Ghi chú</label>
               <input type="text" class="input" id="chi-note" placeholder="Mô tả khoản chi">
             </div>
-            <button class="btn btn-gold w-full" id="btn-add-chi" style="justify-content:center;font-size:15px">
-              <iconify-icon icon="solar:add-circle-linear" style="font-size:18px"></iconify-icon>
-              Thêm khoản chi
-            </button>
+            <div class="member-modal-actions" id="chi-form-actions" style="margin-top:2px">
+              <button class="btn btn-ghost w-full" id="btn-cancel-edit-chi" type="button" style="justify-content:center;display:none">Huỷ</button>
+              <button class="btn btn-gold w-full" id="btn-add-chi" type="button" style="justify-content:center;font-size:15px">
+                <iconify-icon id="chi-submit-icon" icon="solar:add-circle-linear" style="font-size:18px"></iconify-icon>
+                <span id="chi-submit-label">Thêm khoản chi</span>
+              </button>
+            </div>
           </div>
         </div>
       </div><!-- /panel-add -->
@@ -215,14 +236,28 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
   const CATS = ['Sân bóng','Thiết bị','Liên hoan','Y tế','Phần thưởng','Khác'];
   const CAT_COLORS = ['#E0392C','#FFC02E','#2ECC71','#FF6A5E','#F5891F','#9A9AA2'];
   const BASE_YEAR = 2026;
-  let _year = BASE_YEAR, _S = null, _chart = null;
+  let _year = BASE_YEAR, _S = null, _chart = null, _editingCid = null;
 
   function fmt(n) { return new Intl.NumberFormat('vi-VN').format(Math.round(n||0)) + ''; }
+
+
+  function normalizeVNText(str) {
+    return String(str || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D')
+      .toLowerCase();
+  }
+  function isOpeningBalanceEntry(c) {
+    const text = normalizeVNText([c.cat, c.note, c.title, c.desc].filter(Boolean).join(' '));
+    return text.includes('tien dau ky') || text.includes('so du dau ky') || text.includes('dau ky');
+  }
 
   function getChiTieu(S) {
     return (S.chiTieu||[]).filter(c => {
       const y = parseInt(c.date?.substring(0,4));
-      return y === _year;
+      return y === _year && !isOpeningBalanceEntry(c);
     });
   }
 
@@ -290,6 +325,7 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
       if (chiTabs) chiTabs.style.display = 'none';
       // reset về lịch sử khi logout
       setChiTab('history');
+      resetChiForm?.();
     }
     const thActions = document.getElementById('th-actions');
     if (thActions) thActions.style.display = isAdmin ? '' : 'none';
@@ -312,11 +348,16 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
         ? '<span class="badge badge-warning">Quỹ bia</span>'
         : '<span class="badge badge-neutral">Quỹ tháng</span>';
       return `<div class="chi-swipe-row" data-cid="${c.id}">
-        <div class="chi-swipe-actions">
-          <button class="chi-swipe-del" onclick="deleteChiTieu(${c.id})" title="Xoá">
-            <iconify-icon icon="solar:trash-bin-trash-linear"></iconify-icon>
+        ${isAdmin ? `<div class="chi-swipe-actions">
+          <button class="chi-action-btn chi-swipe-edit" onclick="editChiTieu(${c.id})" title="Sửa">
+            <iconify-icon icon="solar:pen-2-linear"></iconify-icon>
+            <span class="chi-action-text">Sửa</span>
           </button>
-        </div>
+          <button class="chi-action-btn chi-swipe-del" onclick="deleteChiTieu(${c.id})" title="Xoá">
+            <iconify-icon icon="solar:trash-bin-trash-linear"></iconify-icon>
+            <span class="chi-action-text">Xoá</span>
+          </button>
+        </div>` : ''}
         <div class="chi-swipe-card">
           <!-- Row 1: STT · Hạng mục + ngày ··· badge quỹ -->
           <div class="chi-card-row1">
@@ -326,9 +367,6 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
               <div class="chi-card__date">${d}</div>
             </div>
             ${fundBadge}
-            ${isAdmin ? `<button class="btn btn-icon btn-ghost" onclick="deleteChiTieu(${c.id})" style="color:var(--text-muted);width:30px;height:30px;display:none" class="chi-del-desktop">
-              <iconify-icon icon="solar:trash-bin-trash-linear" style="font-size:15px"></iconify-icon>
-            </button>` : ''}
           </div>
           <!-- Row 2: nội dung · số tiền -->
           <div class="chi-card-row2">
@@ -340,6 +378,39 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
     }).join('');
     requestAnimationFrame(setupChiSwipe);
   }
+
+  function setChiFormMode(mode, item) {
+    const isEdit = mode === 'edit';
+    _editingCid = isEdit ? item.id : null;
+    document.getElementById('chi-form-overline').textContent = isEdit ? 'Cập nhật' : 'Thêm khoản';
+    document.getElementById('chi-form-title').textContent = isEdit ? 'Sửa khoản chi tiêu' : 'Ghi nhận chi tiêu';
+    document.getElementById('chi-submit-icon')?.setAttribute('icon', isEdit ? 'solar:diskette-linear' : 'solar:add-circle-linear');
+    document.getElementById('chi-submit-label').textContent = isEdit ? 'Lưu thay đổi' : 'Thêm khoản chi';
+    const cancelBtn = document.getElementById('btn-cancel-edit-chi');
+    if (cancelBtn) cancelBtn.style.display = isEdit ? 'inline-flex' : 'none';
+  }
+
+  function resetChiForm() {
+    _editingCid = null;
+    document.getElementById('chi-amount').value = '';
+    document.getElementById('chi-note').value = '';
+    window.DatePicker?.init('chi-date-btn','chi-date-value','chi-date-display');
+    setChiFormMode('add');
+  }
+
+  window.editChiTieu = function(id) {
+    if (!window._isLoggedIn?.() || !_S) return;
+    const c = (_S.chiTieu||[]).find(x=>x.id==id);
+    if (!c) return;
+    setChiTab('add');
+    window.DatePicker?.setValue('chi-date-value','chi-date-display', c.date || new Date().toISOString().slice(0,10));
+    document.getElementById('chi-amount').value = c.amount ?? '';
+    document.getElementById('chi-cat').value = c.cat || 'Khác';
+    document.getElementById('chi-fund').value = c.fund || 'thang';
+    document.getElementById('chi-note').value = c.note || '';
+    setChiFormMode('edit', c);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   window.deleteChiTieu = function(id) {
     if (!window._isLoggedIn?.() || !_S) return;
@@ -411,6 +482,11 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
     // Init date picker với ngày hôm nay
     window.DatePicker?.init('chi-date-btn', 'chi-date-value', 'chi-date-display');
 
+    document.getElementById('btn-cancel-edit-chi')?.addEventListener('click', () => {
+      resetChiForm();
+      setChiTab('history');
+    });
+
     document.getElementById('btn-add-chi')?.addEventListener('click', () => {
       if (!_S || !window._isLoggedIn?.()) return;
       const date   = document.getElementById('chi-date-value').value;
@@ -420,13 +496,18 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
       const note   = document.getElementById('chi-note').value.trim();
       if (!date || isNaN(amount)) { alert('Vui lòng điền đủ thông tin'); return; }
       if (!_S.chiTieu) _S.chiTieu = [];
-      const newId = (_S.nextCid || 1);
-      _S.chiTieu.push({ id: newId, date, amount, cat, fund, note });
-      _S.nextCid = newId + 1;
+
+      if (_editingCid !== null) {
+        const item = _S.chiTieu.find(x => x.id == _editingCid);
+        if (item) Object.assign(item, { date, amount, cat, fund, note });
+      } else {
+        const newId = (_S.nextCid || 1);
+        _S.chiTieu.push({ id: newId, date, amount, cat, fund, note });
+        _S.nextCid = newId + 1;
+      }
+
       window._saveS?.(_S);
-      document.getElementById('chi-amount').value = '';
-      document.getElementById('chi-note').value   = '';
-      window.DatePicker?.init('chi-date-btn','chi-date-value','chi-date-display'); // reset về hôm nay
+      resetChiForm();
       renderPage(_S);
       setChiTab('history');
     });
@@ -438,8 +519,9 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
     if (!isMobile) return;
     document.querySelectorAll('.chi-swipe-row').forEach(row => {
       const card = row.querySelector('.chi-swipe-card');
-      if (!card) return;
-      const SWIPE_W = 72;
+      const actions = row.querySelector('.chi-swipe-actions');
+      if (!card || !actions) return;
+      const SWIPE_W = 128;
       let startX=0, startY=0, baseX=0, dragging=false;
       const clamp = v => Math.max(-SWIPE_W, Math.min(0, v));
       const setX = x => card.style.transform = `translate3d(${x}px,0,0)`;

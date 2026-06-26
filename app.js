@@ -50,6 +50,7 @@
       nextMaid:  1,
       chiTieu:   [],
       nextCid:   1,
+      settings:  { openingBalances: { thang: 0, bia: 0 } },
     };
   }
 
@@ -150,6 +151,7 @@
   }
 
   async function logout() {
+    try { localStorage.setItem('fc_auth_state', '0'); } catch(e) {}
     if (_auth) await _auth.signOut();
   }
 
