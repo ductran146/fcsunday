@@ -72,13 +72,9 @@
         <div style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:4px;background:rgba(224,57,44,.1);display:inline-block;border:1px solid rgba(224,57,44,.2)"></span><span style="color:var(--text-secondary)">Chưa đóng</span></div>
         <div style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:4px;background:rgba(255,192,46,.1);display:inline-block;border:1px solid rgba(255,192,46,.2)"></span><span style="color:var(--text-secondary)">Miễn</span></div>
 
-      <div class="thu-thang-save-bar" id="thu-thang-save-bar" hidden>
-        <button class="btn btn-surface thu-thang-action-btn" id="thu-thang-cancel-btn" type="button" onclick="cancelMonthlyChanges()">
-          Hủy
-        </button>
-        <button class="btn btn-gold thu-thang-action-btn" id="thu-thang-save-btn" type="button" onclick="saveMonthlyChanges()">
-          Lưu
-        </button>
+      <div class="save-bar" id="thu-thang-save-bar" hidden>
+        <button class="save-bar__btn save-bar__btn--cancel" id="thu-thang-cancel-btn" type="button" onclick="cancelMonthlyChanges()">Huỷ</button>
+        <button class="save-bar__btn save-bar__btn--save" id="thu-thang-save-btn" type="button" onclick="saveMonthlyChanges()">Lưu</button>
       </div>
 
       <!-- Table -->

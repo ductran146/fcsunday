@@ -1688,23 +1688,9 @@ body[data-active="thu-thang"] .thu-thang-year-selector, body[data-active="thu-ph
 }
 
 /* ── Thu tháng: confirm before save + future month selection ── */
-body[data-active="thu-thang"] .thu-thang-save-bar, body[data-active="thu-phat"] .thu-thang-save-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin: 0 0 var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid rgba(255,192,46,.2);
-  border-radius: var(--radius-lg);
-  background: rgba(255,192,46,.08);
-}
 
-body[data-active="thu-thang"] .thu-thang-save-bar, body[data-active="thu-phat"] .thu-thang-save-bar[hidden] {
-  display: none !important;
-}
-
-body[data-active="thu-thang"] .thu-thang-save-bar, body[data-active="thu-phat"] .thu-thang-save-bar__text {
+body[data-active="thu-thang"] .thu-thang-save-bar__text,
+body[data-active="thu-phat"] .thu-thang-save-bar__text {
   font-size: 14px;
   font-weight: 400;
   color: var(--text-secondary);
@@ -1757,74 +1743,8 @@ body[data-active="thu-thang"] .cell-future-btn.cell-exempt-btn {
   transform: translate(-50%, 0);
 }
 
-@media (max-width: 767px) {
-  body[data-active="thu-thang"] .thu-thang-save-bar, body[data-active="thu-phat"] .thu-thang-save-bar {
-    position: sticky;
-    bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 8px);
-    z-index: 20;
-    box-shadow: var(--shadow-md);
-  }
-
-  .thu-thang-toast {
-    bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
-  }
-}
-
-/* ── Thu tháng: action bar [Hủy] [Lưu] above bottom menu ── */
-body[data-active="thu-thang"] .thu-thang-save-bar, body[data-active="thu-phat"] .thu-thang-save-bar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-3);
-  margin: 0 0 var(--space-4);
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-body[data-active="thu-thang"] .thu-thang-save-bar, body[data-active="thu-phat"] .thu-thang-save-bar[hidden] {
-  display: none !important;
-}
-
-body[data-active="thu-thang"] .thu-thang-action-btn, body[data-active="thu-phat"] .thu-thang-action-btn {
-  min-width: 104px;
-  justify-content: center;
-}
-
-@media (max-width: 767px) {
-  body[data-active="thu-thang"] .thu-thang-save-bar, body[data-active="thu-phat"] .thu-thang-save-bar {
-    position: fixed;
-    left: var(--space-4);
-    right: var(--space-4);
-    bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 12px);
-    z-index: 90;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-3);
-    padding: var(--space-3);
-    box-shadow: var(--shadow-md);
-    backdrop-filter: blur(12px);
-  }
-
-  body[data-active="thu-thang"] .thu-thang-save-bar, body[data-active="thu-phat"] .thu-thang-save-bar[hidden] {
-    display: none !important;
-  }
-
-  body[data-active="thu-thang"] .thu-thang-action-btn, body[data-active="thu-phat"] .thu-thang-action-btn {
-    width: 100%;
-    min-width: 0;
-    min-height: 44px;
-    padding: 11px 16px;
-  }
-
-  body[data-active="thu-thang"] .page:has(.thu-thang-save-bar:not([hidden])) {
-    padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 92px);
-  }
-
-  body[data-active="thu-thang"] .thu-thang-toast {
-    bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 86px);
-  }
+.thu-thang-toast {
+  bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
 }
 
 
@@ -2681,4 +2601,111 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
 .ptr-triggered .ptr-inner {
   border-color: var(--color-primary);
   background: rgba(224,57,44,.08);
+}
+
+
+/* ════════════════════════════════════════════
+   Save Bar Component — dùng cho Thu tháng & Quỹ bia
+   ════════════════════════════════════════════ */
+/* Save bar: ẩn khi có [hidden] attr */
+.save-bar[hidden] {
+  display: none !important;
+}
+
+/* Mobile: fixed bar sát bottom nav */
+@media (max-width: 767px) {
+  .save-bar:not([hidden]) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+    z-index: 90;
+    padding: 16px 16px;
+    background: rgba(12,12,15,.3);
+    box-shadow: 0 -8px 32px rgba(0,0,0,.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .save-bar__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    min-height: 40px;
+    border-radius: var(--radius-lg);
+    border: none;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .15s, transform .1s;
+  }
+  .save-bar__btn:active { transform: scale(.97); }
+
+  .save-bar__btn--cancel {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--bg-stroke);
+  }
+  .save-bar__btn--cancel:hover { background: var(--bg-stroke); }
+
+  .save-bar__btn--save {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-end));
+    color: #1a1206;
+  }
+  .save-bar__btn--save:hover { opacity: .9; }
+
+  .page:has(.save-bar:not([hidden])) {
+    padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 80px);
+  }
+
+  .thu-thang-toast {
+    bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 86px);
+  }
+}
+
+/* Desktop: inline trong flow */
+@media (min-width: 768px) {
+  .save-bar:not([hidden]) {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    margin: 0 0 var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid rgba(255,192,46,.2);
+    border-radius: var(--radius-lg);
+    background: rgba(255,192,46,.08);
+  }
+
+  .save-bar__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    min-height: 40px;
+    padding: 0 20px;
+    border-radius: var(--radius-lg);
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 104px;
+    transition: opacity .15s, transform .1s;
+  }
+  .save-bar__btn--cancel {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--bg-stroke);
+  }
+  .save-bar__btn--save {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-end));
+    color: #1a1206;
+  }
+  .save-bar__btn--save:hover { opacity: .9; }
 }
