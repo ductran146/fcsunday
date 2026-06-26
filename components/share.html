@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <script>
+    /* Theme: apply trước khi render để tránh flash */
+    (function(){
+      var t = localStorage.getItem('fc-sunday-theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme','light');
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="theme-color" content="#0C0C0F">
+  <title>FC Sunday — Tổng quỹ nhanh</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
+</head>
+<body style="background:var(--bg-base);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+
+  <div style="max-width:440px;width:100%">
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:32px">
+      <img src="icon-192.png" alt="FC Sunday" style="width:64px;height:64px;object-fit:contain;margin-bottom:16px">
+      <h1 style="font-size:28px;font-weight:900;text-transform:uppercase;letter-spacing:-.02em">FC Sunday</h1>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:4px" id="share-date">—</div>
+    </div>
+
+    <!-- Total fund hero -->
+    <div class="hero-fund" style="margin-bottom:16px;text-align:center">
+      <div class="hero-fund__label" style="text-align:center">Tổng quỹ hiện tại</div>
+      <div class="hero-fund__total" style="text-align:center;font-size:40px" id="share-total">0</div>
+    </div>
+
+    <!-- Split -->
+    <div class="fund-split" style="margin-bottom:16px">
+      <div class="fund-split__item">
+        <div class="fund-split__item-label">Quỹ tháng</div>
+        <div class="fund-split__item-value" id="share-thang" style="color:var(--color-primary)">0</div>
+      </div>
+      <div class="fund-split__item">
+        <div class="fund-split__item-label">Quỹ bia</div>
+        <div class="fund-split__item-value" id="share-bia" style="color:var(--color-primary)">0</div>
+      </div>
+    </div>
+
+    <!-- Debt notice -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="section-overline" style="margin-bottom:8px">Tổng nợ chưa thu</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="color:var(--text-secondary);font-size:14px">Nợ quỹ bia</span>
+        <span style="font-weight:700;color:var(--color-accent-light)" id="share-no-bia">0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+        <span style="color:var(--text-secondary);font-size:14px">Nợ quỹ tháng</span>
+        <span style="font-weight:700;color:var(--color-accent-light)" id="share-no-thang">0</span>
+      </div>
+    </div>
+
+    <!-- Back link -->
+    <div style="text-align:center">
+      <a href="index.html" style="font-size:13px;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px">
+        <iconify-icon icon="solar:arrow-left-linear" style="font-size:16px"></iconify-icon>
+        Quay lại trang chính
+      </a>
+    </div>
+  </div>
+
+<script>
+  const FEE = 200000, FINE = 50000, BASE_YEAR = 2026;
+  const YEAR = BASE_YEAR;
+
+  function fmt(n) {
+    if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1).replace('.0','') + 'M';
+    return new Intl.NumberFormat('vi-VN').format(Math.round(n||0)) + '';
+  }
+
+  function render(S) {
+    const members = (S.members||[]).filter(m => m.status !== 'left');
+    const matches = (S.matches||[]).filter(m => !m.year || m.year === YEAR);
+    const chiTieu = (S.chiTieu||[]).filter(c => c.date?.startsWith(String(YEAR)));
+
+    const now = new Date();
+    const curMonthIdx = now.getMonth(); // 0-based
+    let thuThang = 0, noThang = 0;
+    members.forEach(m => {
+      const arr = S.thuThang?.[String(m.id)] || Array(12).fill(0);
+      arr.forEach((v, mi) => {
+        if (v === 1) thuThang += FEE;
+        else if (v === 0 && mi <= curMonthIdx) noThang += FEE;
+      });
+    });
+
+    let thuBia = 0, noBia = 0;
+    matches.forEach(match => {
+      (match.losers||[]).forEach(l => { if(l.paid) thuBia += FINE; else noBia += FINE; });
+      thuBia += (match.thuThem||0);
+    });
+
+    const chiThang = chiTieu.filter(c=>!c.fund||c.fund==='thang').reduce((s,c)=>s+(c.amount||0),0);
+    const chiBia   = chiTieu.filter(c=>c.fund==='bia').reduce((s,c)=>s+(c.amount||0),0);
+
+    const tonThang = thuThang - chiThang;
+    const tonBia   = thuBia - chiBia;
+
+    document.getElementById('share-total').innerHTML = fmt(tonThang+tonBia);
+    document.getElementById('share-thang').textContent = fmt(tonThang);
+    document.getElementById('share-bia').textContent   = fmt(tonBia);
+    document.getElementById('share-no-thang').textContent = fmt(noThang);
+    document.getElementById('share-no-bia').textContent   = fmt(noBia);
+    document.getElementById('share-date').textContent = 'Cập nhật ' + new Date().toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  }
+
+  // Direct Firebase fetch (public read)
+  const FIREBASE_URL = 'https://fc-sunday-8f932-default-rtdb.asia-southeast1.firebasedatabase.app';
+
+  async function loadData() {
+    try {
+      const cached = localStorage.getItem('fc2026');
+      if (cached) render(JSON.parse(cached));
+      const res = await fetch(`${FIREBASE_URL}/.json?t=${Date.now()}`);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const S = await res.json();
+      if (S) { render(S); localStorage.setItem('fc2026', JSON.stringify(S)); }
+    } catch(e) {
+      const cached = localStorage.getItem('fc2026');
+      if (cached) render(JSON.parse(cached));
+      else document.getElementById('share-date').textContent = 'Không thể tải dữ liệu';
+    }
+  }
+  loadData();
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .catch(err => console.warn('SW register failed:', err));
+    });
+  }
+</script>
+</body>
+</html>
