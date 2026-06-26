@@ -72,10 +72,10 @@
   --color-warning:  #FFC02E;
 
   /* Text */
-  --text-primary:   #ECEAE6;
-  --text-secondary: #9A9AA2;
-  --text-muted:     #5D5D66;
-  --text-disabled:  #3a3a44;
+  --text-primary:   #F4F2ED;
+  --text-secondary: #C8C8D4;
+  --text-muted:     #A0A0AE;
+  --text-disabled:  #66666F;
 
   /* Gold for amount highlight */
   --color-amount:   #cfcdc9;
@@ -321,10 +321,10 @@ img { max-width: 100%; display: block; }
 
 .kpi-card__label {
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .kpi-card__value {
