@@ -2,6 +2,13 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <script>
+    /* Theme: apply trước khi render để tránh flash */
+    (function(){
+      var t = localStorage.getItem('fc-sunday-theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme','light');
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -82,6 +89,27 @@
           <button class="btn btn-primary" id="btn-save-settings">
             <iconify-icon icon="solar:check-circle-linear" style="font-size:18px"></iconify-icon>
             Lưu
+          </button>
+        </div>
+      </section>
+
+      <!-- Giao diện — hiện trên mobile, ẩn desktop (desktop dùng header toggle) -->
+      <section class="settings-card" style="margin-top:12px">
+        <div class="settings-card__header" style="margin-bottom:16px">
+          <div>
+            <div class="section-overline" style="margin-bottom:2px">Hiển thị</div>
+            <div class="section-title">Giao diện</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+          <div>
+            <div style="font-size:14px;font-weight:600;color:var(--text-primary)" id="theme-label">Chế độ tối</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Chuyển đổi giao diện sáng / tối</div>
+          </div>
+          <button id="btn-theme-settings" onclick="window._toggleTheme?.(); updateThemeUI()"
+            style="display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:var(--radius-lg);border:1px solid var(--bg-stroke);background:var(--bg-elevated);cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap">
+            <iconify-icon id="theme-settings-icon" icon="solar:sun-linear" style="font-size:18px;color:var(--color-primary)"></iconify-icon>
+            <span id="theme-settings-label">Sang sáng</span>
           </button>
         </div>
       </section>
@@ -175,7 +203,18 @@
   };
   window._onAuthChange = function() { renderSettings(); };
 
+  function updateThemeUI() {
+    const isLight = document.documentElement.hasAttribute('data-theme');
+    const label = document.getElementById('theme-label');
+    const btnLabel = document.getElementById('theme-settings-label');
+    const icon = document.getElementById('theme-settings-icon');
+    if (label) label.textContent = isLight ? 'Chế độ sáng' : 'Chế độ tối';
+    if (btnLabel) btnLabel.textContent = isLight ? 'Sang tối' : 'Sang sáng';
+    if (icon) icon.setAttribute('icon', isLight ? 'solar:moon-linear' : 'solar:sun-linear');
+  }
+
   window.onComponentsReady = function () {
+    updateThemeUI();
     document.getElementById('btn-settings-login')?.addEventListener('click', () => document.getElementById('btn-login')?.click());
     ['opening-thang', 'opening-bia'].forEach(id => {
       const input = document.getElementById(id);

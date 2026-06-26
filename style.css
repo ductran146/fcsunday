@@ -2797,7 +2797,7 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
 .btn-theme-toggle {
   width: 36px;
   height: 36px;
-  display: inline-flex;
+  display: none; /* ẩn mobile mặc định */
   align-items: center;
   justify-content: center;
   border: none;
@@ -2807,6 +2807,10 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
   color: var(--text-secondary);
   font-size: 20px;
   transition: background .15s, color .15s;
+}
+/* Hiện trên desktop */
+@media (min-width: 768px) {
+  .btn-theme-toggle { display: inline-flex; }
 }
 .btn-theme-toggle:hover {
   background: var(--bg-hover);
