@@ -136,8 +136,8 @@
           </div>
         </div>
         <!-- History table -->
-        <div class="card" style="padding:0;overflow:hidden">
-          <div style="padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between">
+        <div class="card-no-border" style="padding:0;overflow:hidden">
+          <div style="padding:20px 0 0;display:flex;align-items:center;justify-content:space-between">
             <div>
               <div class="section-overline" style="margin-bottom:4px">Lịch sử</div>
               <div class="section-title" style="font-size:16px">Tất cả khoản chi</div>
@@ -148,7 +148,7 @@
               <option value="bia">Quỹ bia</option>
             </select>
           </div>
-          <div id="chi-list" style="display:flex;flex-direction:column;gap:8px;padding:12px 20px 20px"></div>
+          <div id="chi-list" style="display:flex;flex-direction:column;gap:8px;padding: 16px 0px 0 0"></div>
         </div>
       </div><!-- /panel-history -->
 
@@ -177,7 +177,7 @@
               <select class="input" id="chi-cat">
                 <option value="Sân bóng">⚽ Sân bóng</option>
                 <option value="Thiết bị">🎽 Thiết bị</option>
-                <option value="Tiệc / Liên hoan">🎉 Tiệc / Liên hoan</option>
+                <option value="Liên hoan">🎉 Liên hoan</option>
                 <option value="Y tế">🏥 Y tế</option>
                 <option value="Phần thưởng">🏆 Phần thưởng</option>
                 <option value="Khác">📦 Khác</option>
@@ -212,7 +212,7 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
 <script src="app.js" defer></script>
 <script src="components/components-loader.js" defer></script>
 <script>
-  const CATS = ['Sân bóng','Thiết bị','Tiệc / Liên hoan','Y tế','Phần thưởng','Khác'];
+  const CATS = ['Sân bóng','Thiết bị','Liên hoan','Y tế','Phần thưởng','Khác'];
   const CAT_COLORS = ['#E0392C','#FFC02E','#2ECC71','#FF6A5E','#F5891F','#9A9AA2'];
   const BASE_YEAR = 2026;
   let _year = BASE_YEAR, _S = null, _chart = null;

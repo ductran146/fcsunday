@@ -236,6 +236,10 @@ img { max-width: 100%; display: block; }
   border-radius: var(--radius-xl);
   padding: var(--space-4);
 }
+.card-no-border {
+  border-radius: var(--radius-xl);
+  padding: 0;
+}
 
 .card-elevated {
   background: var(--bg-elevated);
@@ -629,7 +633,7 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 /* ── Hero Fund ── */
 .hero-fund {
   background: radial-gradient(ellipse at 60% -20%, rgba(224,57,44,.2) 0%, transparent 65%),
-              radial-gradient(ellipse at 0% 100%, rgba(255,192,46,.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 0% 100%, rgba(215,96,268,.08) 0%, transparent 60%),
               var(--bg-surface);
   border: 1px solid var(--bg-stroke);
   border-radius: var(--radius-xl);
@@ -656,8 +660,8 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
   margin-top: var(--space-4);
 }
 .fund-split__item {
-  background: var(--bg-elevated);
-  border: 1px solid var(--bg-border);
+  background: rgba(24, 24, 13, 0.15);
+  border: 1px solid rgba(197, 179, 178, 0.10);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
 }
@@ -742,7 +746,9 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 .podium-card--1 {
   background: radial-gradient(ellipse at 50% 0%, rgba(255,192,46,.12) 0%, transparent 70%), var(--bg-elevated);
   border-color: rgba(255,192,46,.35);
-  padding-top: var(--space-6);
+  padding-top: var(--space-4);
+  padding-left: 8px;
+  padding-right: 8px;
 }
 .podium-card--1 .podium-name  { color: var(--color-primary); font-size: 14px; }
 .podium-card--1 .podium-medal { font-size: 40px; }
