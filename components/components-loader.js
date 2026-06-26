@@ -104,7 +104,7 @@
     const authEls    = document.querySelectorAll('.auth-only');
 
     if (btnLogin)   btnLogin.style.display   = isLoggedIn ? 'none' : 'inline-flex';
-    if (btnSetting) btnSetting.style.display = isLoggedIn ? 'inline-flex' : 'none';
+    if (btnSetting) btnSetting.style.display = 'inline-flex'; // luôn hiện
     if (btnAvatar)  btnAvatar.style.display  = isLoggedIn ? 'inline-flex' : 'none';
     authEls.forEach(el => {
       if (el.id !== 'btn-setting' && el.id !== 'btn-avatar') {
