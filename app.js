@@ -440,15 +440,15 @@
     anyOpen ? lock() : unlock();
   }
 
-  // Observe DOM changes (display toggled via style)
+  // Observe DOM changes: style changes + new elements added
   const observer = new MutationObserver(check);
 
-  // Start observing once DOM is ready
   function startObserving() {
     observer.observe(document.body, {
       subtree: true,
       attributes: true,
       attributeFilter: ['style'],
+      childList: true,   // detect khi append modal mới vào body
     });
   }
 
