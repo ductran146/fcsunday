@@ -102,7 +102,7 @@
                   Còn nợ
                   <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:12px;color:rgba(0,0,0,.55)"></iconify-icon>
                 </span>
-                <span id="fund-thang-no" style="color:#B82020;font-weight:700">0</span>
+                <span id="fund-thang-no" style="font-weight:700">0</span>
               </div>
             </div>
           </div>
@@ -117,7 +117,7 @@
                   Còn nợ
                   <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:12px;color:rgba(0,0,0,.55)"></iconify-icon>
                 </span>
-                <span id="fund-bia-no" style="color:#B82020;font-weight:700">0</span>
+                <span id="fund-bia-no" style="font-weight:700">0</span>
               </div>
             </div>
           </div>
@@ -432,16 +432,26 @@
       new Intl.NumberFormat('vi-VN').format(Math.round(tonTotal || 0)) ;
     const elThang = document.getElementById('fund-thang-total');
     elThang.textContent = fmtShort(tonThang);
-    elThang.style.color = tonThang >= 0 ? '#1A1206' : '#8B1A15';
+    const isDark = !document.documentElement.hasAttribute('data-theme');
+    elThang.style.color = tonThang >= 0
+      ? (isDark ? 'var(--text-primary)' : '#1A1206')
+      : (isDark ? 'var(--color-accent-light)' : '#B82020');
     document.getElementById('fund-thang-thu').textContent    = fmtShort(thuThangDisplay);
     document.getElementById('fund-thang-chi').textContent    = fmtShort(chiThang);
-    document.getElementById('fund-thang-no').textContent     = fmtShort(thuThangNo);
+    const noColor = isDark ? 'var(--color-accent-light)' : '#B82020';
+    const noThangEl = document.getElementById('fund-thang-no');
+    noThangEl.textContent = fmtShort(thuThangNo);
+    noThangEl.style.color = noColor;
     const elBia = document.getElementById('fund-bia-total');
     elBia.textContent = fmtShort(tonBia);
-    elBia.style.color = tonBia >= 0 ? '#1A1206' : '#8B1A15';
+    elBia.style.color = tonBia >= 0
+      ? (isDark ? 'var(--text-primary)' : '#1A1206')
+      : (isDark ? 'var(--color-accent-light)' : '#B82020');
     document.getElementById('fund-bia-thu').textContent      = fmtShort(thuBiaDisplay);
     document.getElementById('fund-bia-chi').textContent      = fmtShort(chiBia);
-    document.getElementById('fund-bia-no').textContent       = fmtShort(noBia);
+    const noBiaEl = document.getElementById('fund-bia-no');
+    noBiaEl.textContent = fmtShort(noBia);
+    noBiaEl.style.color = noColor;
     document.getElementById('hero-thu-them').textContent     = fmtShort(thuBiaThuThem);
     document.getElementById('hero-tong-chi').textContent     = fmtShort(chiThang + chiBia);
 
