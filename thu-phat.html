@@ -234,7 +234,7 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
 <div class="sheet-backdrop" id="bia-ranking-sheet" style="display:none;align-items:flex-end" onclick="if(event.target===this)closeBiaRankingSheet()">
   <div class="sheet fade-in" style="height:calc(100dvh - 64px);max-height:calc(100dvh - 64px);overflow:hidden;display:flex;flex-direction:column;border-radius:var(--radius-xl) var(--radius-xl) 0 0">
     <div class="modal-handle"></div>
-    <div style="padding:0px 0 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div style="padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
       <div>
         <div class="section-overline">Xếp hạng</div>
         <div class="section-title" style="font-size:16px">Top thua nhiều nhất</div>
@@ -243,7 +243,7 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
         <iconify-icon icon="solar:close-circle-linear" style="font-size:22px"></iconify-icon>
       </button>
     </div>
-    <div id="bia-ranking-sheet-list" style="overflow-y:auto;padding: 0;flex:1"></div>
+    <div id="bia-ranking-sheet-list" style="overflow-y:auto;padding:0 20px 32px;flex:1"></div>
   </div>
 </div>
 <script>
@@ -569,8 +569,9 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
       </div>`;
 
     document.body.appendChild(backdrop);
+    window._lockScroll?.();
 
-    const close = () => backdrop.remove();
+    const close = () => { backdrop.remove(); window._unlockScroll?.(); };
     backdrop.addEventListener('click', e => { if(e.target===backdrop) close(); });
     document.getElementById('btn-delete-cancel').addEventListener('click', close);
     document.getElementById('btn-delete-confirm').addEventListener('click', async () => {

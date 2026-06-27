@@ -452,6 +452,10 @@
     });
   }
 
+  // Expose để các trang gọi trực tiếp
+  window._lockScroll   = lock;
+  window._unlockScroll = unlock;
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', startObserving);
   } else {

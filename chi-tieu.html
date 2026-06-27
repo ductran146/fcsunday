@@ -43,7 +43,7 @@
     }
     .chi-card__stt {
       width: 24px; height: 24px; border-radius: var(--radius-full);
-      background: var(--bg-base); color: var(--text-muted);
+      background: var(--bg-stroke); color: var(--text-muted);
       font-size: 11px; font-weight: 700;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
@@ -486,7 +486,8 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
       </div>
     </div>`;
     document.body.appendChild(backdrop);
-    const close = () => backdrop.remove();
+    window._lockScroll?.();
+    const close = () => { backdrop.remove(); window._unlockScroll?.(); };
     backdrop.addEventListener('click', e => { if(e.target===backdrop) close(); });
     document.getElementById('_chi_del_cancel').addEventListener('click', close);
     document.getElementById('_chi_del_ok').addEventListener('click', () => {
