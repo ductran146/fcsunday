@@ -674,26 +674,34 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 
 /* ── Hero Fund ── */
 .hero-fund {
-  background: radial-gradient(ellipse at 60% -20%, rgba(224,57,44,.2) 0%, transparent 65%),
-              radial-gradient(ellipse at 0% 100%, rgba(224,57,44,.08) 0%, transparent 35%),
-              var(--bg-surface);
-  border: 1px solid var(--bg-stroke);
+  background: linear-gradient(135deg, #FFC02E 0%, #F5891F 100%);
+  border: none;
   border-radius: var(--radius-xl);
-  padding: var(--space-4);
-  box-shadow: var(--shadow-glow);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: 0 8px 32px rgba(255,192,46,.35);
+  position: relative;
+  overflow: hidden;
+}
+.hero-fund::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 80% 20%, rgba(255,255,255,.18) 0%, transparent 60%);
+  pointer-events: none;
 }
 .hero-fund__label {
-  font-size: 11px; font-weight: 700;
+  font-size: 11px; font-weight: 800;
   letter-spacing: .2em; text-transform: uppercase;
-  color: var(--color-accent);
+  color: rgba(0,0,0,.55);
 }
 .hero-fund__total {
-  font-size: 32px; font-weight: 700;
+  font-size: 36px; font-weight: 800;
   letter-spacing: -.03em; line-height: 1;
-  margin: var(--space-2) 0 var(--space-4);
+  margin: var(--space-1) 0 var(--space-3);
   font-variant-numeric: tabular-nums;
+  color: #1A1206;
 }
-.hero-fund__total span { color: var(--color-primary); }
+.hero-fund__total span { color: #1A1206; }
 
 .fund-split {
   display: grid;
