@@ -402,3 +402,59 @@
   });
 })();
 
+
+// ── Scroll Lock: khoá scroll khi có sheet/modal hiện ────────
+(function initScrollLock() {
+  let _scrollY = 0;
+  let _locked = false;
+
+  function lock() {
+    if (_locked) return;
+    _locked = true;
+    _scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${_scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.overflowY = 'scroll';
+  }
+
+  function unlock() {
+    if (!_locked) return;
+    _locked = false;
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.overflowY = '';
+    window.scrollTo(0, _scrollY);
+  }
+
+  function check() {
+    const anyOpen = Array.from(
+      document.querySelectorAll('.sheet-backdrop, .modal-backdrop')
+    ).some(el => {
+      const d = el.style.display;
+      return d && d !== 'none';
+    });
+    anyOpen ? lock() : unlock();
+  }
+
+  // Observe DOM changes (display toggled via style)
+  const observer = new MutationObserver(check);
+
+  // Start observing once DOM is ready
+  function startObserving() {
+    observer.observe(document.body, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style'],
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startObserving);
+  } else {
+    startObserving();
+  }
+})();
