@@ -406,11 +406,11 @@
 // ── Scroll Lock: khoá scroll khi có sheet/modal hiện ────────
 (function initScrollLock() {
   let _scrollY = 0;
-  let _locked = false;
+  let _lockCount = 0; // counter để handle nhiều modal chồng nhau
 
   function lock() {
-    if (_locked) return;
-    _locked = true;
+    _lockCount++;
+    if (_lockCount > 1) return; // đã lock rồi
     _scrollY = window.scrollY;
     document.body.style.position = 'fixed';
     document.body.style.top = `-${_scrollY}px`;
@@ -420,8 +420,9 @@
   }
 
   function unlock() {
-    if (!_locked) return;
-    _locked = false;
+    if (_lockCount <= 0) return;
+    _lockCount--;
+    if (_lockCount > 0) return; // còn modal khác đang mở
     document.body.style.position = '';
     document.body.style.top = '';
     document.body.style.left = '';
@@ -430,31 +431,34 @@
     window.scrollTo(0, _scrollY);
   }
 
-  function check() {
-    const anyOpen = Array.from(
-      document.querySelectorAll('.sheet-backdrop, .modal-backdrop')
-    ).some(el => {
-      const d = el.style.display;
-      return d && d !== 'none';
-    });
-    anyOpen ? lock() : unlock();
-  }
+  // Expose để các trang gọi trực tiếp — CÁCH DUY NHẤT để lock
+  window._lockScroll   = lock;
+  window._unlockScroll = unlock;
 
-  // Observe DOM changes: style changes + new elements added
-  const observer = new MutationObserver(check);
+  // Observer chỉ xử lý sheet-backdrop/modal-backdrop có style.display toggle
+  // (không dùng check() nữa để tránh conflict với direct lock/unlock)
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      if (m.type === 'attributes' && m.attributeName === 'style') {
+        const el = m.target;
+        if (!el.classList?.contains('sheet-backdrop') && !el.classList?.contains('modal-backdrop')) continue;
+        const d = el.style.display;
+        const isOpen = d && d !== 'none';
+        const wasOpen = m.oldValue && m.oldValue.includes('display') && !m.oldValue.includes('none');
+        if (isOpen && !wasOpen) lock();
+        if (!isOpen && wasOpen) unlock();
+      }
+    }
+  });
 
   function startObserving() {
     observer.observe(document.body, {
       subtree: true,
       attributes: true,
       attributeFilter: ['style'],
-      childList: true,   // detect khi append modal mới vào body
+      attributeOldValue: true,
     });
   }
-
-  // Expose để các trang gọi trực tiếp
-  window._lockScroll   = lock;
-  window._unlockScroll = unlock;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', startObserving);

@@ -322,14 +322,14 @@ img { max-width: 100%; display: block; }
 .kpi-card__label {
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text-secondary);
 }
 
 .kpi-card__value {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 800;
   letter-spacing: -.02em;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
@@ -706,14 +706,13 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 .fund-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
-  margin-top: var(--space-4);
+  gap: var(--space-3);
+  margin-top: var(--space-2);
 }
 .fund-split__item {
   background: rgba(24, 24, 13, 0.15);
-  border: 1px solid rgba(197, 179, 178, 0.10);
   border-radius: var(--radius-lg);
-  padding: var(--space-4);
+  padding: var(--space-2);
 }
 .fund-split__item-label { font-size: 12px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); margin-bottom: var(--space-1); }
 .fund-split__item-value { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -773,7 +772,7 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
   align-items: flex-end;
   justify-content: center;
   gap: var(--space-3);
-  padding: var(--space-4) 0;
+  padding: var(--space-4) 0 0 0;
 }
 .podium-card {
   flex: 1;
@@ -781,7 +780,7 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
   flex-direction: column;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-4) var(--space-3);
+  padding: var(--space-3) var(--space-1);
   border-radius: var(--radius-lg);
   background: var(--bg-elevated);
   border: 1px solid var(--bg-border);
@@ -810,7 +809,7 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 .podium-card--3 { border-color: rgba(205,127,50,.25); }
 
 /* ── Leaderboard ── */
-.leaderboard-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.leaderboard-list { display: flex; flex-direction: column; }
 .leaderboard-item {
   display: flex; align-items: center; gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
@@ -823,7 +822,7 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 .leaderboard-item__rank {
   width: 28px; height: 28px;
   border-radius: var(--radius-full);
-  background: var(--bg-stroke);
+  background: var(--bg-border);
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 800;
   color: var(--text-muted);
@@ -2493,11 +2492,11 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
 .settings-page { max-width: var(--max-width); }
 
 .settings-hero {
-  display: flex; align-items: center; gap: var(--space-4);
+  display: flex; align-items: top; gap: var(--space-4);
   margin-bottom: var(--space-6);
 }
 .settings-hero__icon {
-  width: 48px; height: 48px; border-radius: var(--radius-lg);
+  width: 52px; height: 52px; border-radius: var(--radius-lg);
   background: rgba(224,57,44,.12); border: 1px solid rgba(224,57,44,.2);
   display: flex; align-items: center; justify-content: center;
   font-size: 24px; color: var(--color-accent-light); flex-shrink: 0;
@@ -2762,9 +2761,7 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
 }
 
 [data-theme="light"] .card,
-[data-theme="light"] .card-no-border {
-  box-shadow: 0 2px 8px rgba(0,0,0,.06);
-}
+
 
 [data-theme="light"] .input {
   background: var(--bg-elevated);
@@ -2828,7 +2825,6 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
 /* ── Dark mode: fund-split cards dùng màu nền trang, chữ trắng ── */
 :root:not([data-theme="light"]) .hero-fund .fund-split__item {
   background: var(--bg-base);
-  border: 1px solid var(--bg-border);
 }
 :root:not([data-theme="light"]) .hero-fund .fund-split__item-label {
   color: var(--text-muted);
@@ -2850,7 +2846,6 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
 /* Light mode: fund-split cards — màu nền trang, chữ tối */
 [data-theme="light"] .hero-fund .fund-split__item {
   background: var(--bg-base);
-  border: 1px solid rgba(0,0,0,.06);
 }
 [data-theme="light"] .hero-fund .fund-split__item-label {
   color: var(--text-muted);

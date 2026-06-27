@@ -96,7 +96,7 @@
     .match-item__header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
     .match-item__num {
       width: 32px; height: 32px; border-radius: var(--radius-sm);
-      background: var(--bg-stroke); color: var(--text-secondary);
+      background: var(--bg-border); color: var(--text-secondary);
       font-size: 12px; font-weight: 800;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
@@ -133,7 +133,7 @@
       </div>
 
       <!-- KPI 2x2 -->
-      <div class="grid-2-fixed" style="margin-bottom:24px">
+      <div class="grid-2-fixed" style="margin-bottom:20px">
         <div class="kpi-card kpi-card--gold">
           <div class="kpi-card__label">Tổng thu bia</div>
           <div class="kpi-card__value" id="kpi-thu-bia">0</div>
@@ -153,7 +153,7 @@
       </div>
 
       <!-- Leaderboard full width -->
-      <div class="card" style="margin-bottom:24px">
+      <div class="card" style="margin-bottom:20px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
           <div>
             <div class="section-overline" style="margin-bottom:4px">Xếp hạng</div>
@@ -482,8 +482,8 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
         </div>`;
       }).join('');
 
-      const addBtn=isAdmin?`<button class="btn btn-outline w-full" onclick="openAddMatch(${mi})" style="justify-content:center;margin-top:4px">
-        <iconify-icon icon="solar:add-circle-linear" style="font-size:18px"></iconify-icon>+ Thêm trận ${MONTHS_FULL[mi]}
+      const addBtn=isAdmin?`<button class="btn btn-outline w-full" onclick="openAddMatch(${mi})" style="justify-content:center;">
+        <iconify-icon icon="solar:add-circle-linear" style="font-size:18px"></iconify-icon>Thêm trận ${MONTHS_FULL[mi]}
       </button>`:'';
 
       const card=document.createElement('div');
