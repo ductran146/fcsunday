@@ -102,7 +102,7 @@
                   Còn nợ
                   <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:12px;color:rgba(0,0,0,.55)"></iconify-icon>
                 </span>
-                <span id="fund-thang-no" style="color:#d01111;font-weight:700">0</span>
+                <span id="fund-thang-no" style="color:#B82020;font-weight:700">0</span>
               </div>
             </div>
           </div>
@@ -117,7 +117,7 @@
                   Còn nợ
                   <iconify-icon icon="solar:alt-arrow-right-linear" style="font-size:12px;color:rgba(0,0,0,.55)"></iconify-icon>
                 </span>
-                <span id="fund-bia-no" style="color:#e21313;font-weight:700">0</span>
+                <span id="fund-bia-no" style="color:#B82020;font-weight:700">0</span>
               </div>
             </div>
           </div>
@@ -476,6 +476,9 @@
 
     window._fullLossRanking = ranking; // lưu full list cho sheet
 
+    // Chỉ hiển thị top 5 trên trang chính
+    const top5 = ranking.slice(0, 5);
+
     const lbList = document.getElementById('leaderboard-list');
     if (ranking.length === 0) {
       lbList.innerHTML = `<div class="empty-state" style="padding:32px 0">
@@ -483,9 +486,8 @@
         <div class="empty-state__desc">Chưa có dữ liệu trận đấu</div>
       </div>`;
     } else {
-      // Podium: sắp xếp hiển thị theo thứ tự 2-1-3
-      const podium = ranking.slice(0, 3);
-      const rest   = ranking.slice(3);
+      const podium = top5.slice(0, 3);
+      const rest   = top5.slice(3);
       const podiumOrder = podium.length === 1 ? [podium[0]]
                         : podium.length === 2 ? [podium[1], podium[0]]
                         : [podium[1], podium[0], podium[2]];
