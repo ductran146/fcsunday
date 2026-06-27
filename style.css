@@ -728,7 +728,7 @@ select.input option { background: var(--bg-elevated); color: var(--text-primary)
 .fund-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
+  gap: var(--space-2);
   margin-top: var(--space-4);
 }
 .fund-split__item {
@@ -2899,4 +2899,11 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
 .btn-theme-toggle:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
+}
+/* Chi tiêu KPI grid — 2x2 trên mọi màn hình */
+.chi-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
 }

@@ -128,7 +128,7 @@
       </div>
 
       <!-- KPI -->
-      <div id="chi-kpi" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px">
+      <div id="chi-kpi" class="chi-kpi-grid">
         <div class="kpi-card kpi-card--red">
           <div class="kpi-card__label">Tổng chi</div>
           <div class="kpi-card__value" id="kpi-tong-chi">0</div>
@@ -517,7 +517,7 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
     document.getElementById('tab-add').classList.toggle('active', tab === 'add');
     // Ẩn KPI khi đang ở tab thêm khoản
     const kpiEl = document.getElementById('chi-kpi');
-    if (kpiEl) kpiEl.style.display = tab === 'add' ? 'none' : '';
+    if (kpiEl) kpiEl.style.display = tab === 'add' ? 'none' : 'grid';
   };
 
   window.onComponentsReady = function() {
