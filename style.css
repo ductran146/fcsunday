@@ -2868,3 +2868,11 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
 [data-theme="light"] .hero-fund .fund-split__row[onclick]:hover {
   background: var(--bg-hover);
 }
+
+/* Chi tiêu KPI grid — 2x2 trên mọi màn hình */
+.chi-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
+}
