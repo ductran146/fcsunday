@@ -2846,3 +2846,25 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
 :root:not([data-theme="light"]) .hero-fund .fund-split__row[onclick]:hover {
   background: var(--bg-stroke);
 }
+
+/* Light mode: fund-split cards — màu nền trang, chữ tối */
+[data-theme="light"] .hero-fund .fund-split__item {
+  background: var(--bg-base);
+  border: 1px solid rgba(0,0,0,.06);
+}
+[data-theme="light"] .hero-fund .fund-split__item-label {
+  color: var(--text-muted);
+}
+[data-theme="light"] .hero-fund .fund-split__item-value {
+  color: var(--text-primary);
+}
+[data-theme="light"] .hero-fund .fund-split__row {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+[data-theme="light"] .hero-fund .fund-split__row span:last-child {
+  color: var(--text-primary);
+}
+[data-theme="light"] .hero-fund .fund-split__row[onclick]:hover {
+  background: var(--bg-hover);
+}
