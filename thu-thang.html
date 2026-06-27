@@ -35,9 +35,15 @@
       transition: background .12s, transform .1s;
     }
     .cell-btn:active { transform: scale(.93); }
-    .cell-paid-btn    { background: rgba(46,204,113,.15); color: var(--color-success); }
-    .cell-unpaid-btn  { background: rgba(224,57,44,.1);  color: var(--text-muted); }
-    .cell-exempt-btn  { background: rgba(255,192,46,.1); color: var(--color-primary); font-style: italic; }
+    /* Dark mode (default) */
+    .cell-paid-btn    { background: #2ECC71; color: #FFFFFF; font-weight: 700; }
+    .cell-unpaid-btn  { background: #E0392C; color: #FFFFFF; font-weight: 700; }
+    .cell-exempt-btn  { background: #FFC02E; color: #FFFFFF; font-style: italic; font-weight: 700; }
+
+    /* Light mode */
+    [data-theme="light"] .cell-paid-btn    { background: #2ECC71; color: #FFFFFF; }
+    [data-theme="light"] .cell-unpaid-btn  { background: #E0392C; color: #FFFFFF; }
+    [data-theme="light"] .cell-exempt-btn  { background: #FFC02E; color: #FFFFFF; }
     .cell-future-btn  { opacity: .72; }
     .summary-row td   { background: var(--bg-elevated) !important; font-weight: 700; }
   </style>

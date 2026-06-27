@@ -41,14 +41,6 @@
         </div>
       </div>
 
-      <section class="settings-card" id="settings-auth-gate" style="display:none">
-        <div class="empty-state" style="padding:28px 0">
-          <div class="empty-state__icon"><iconify-icon icon="solar:lock-keyhole-linear"></iconify-icon></div>
-          <div class="empty-state__title">Cần đăng nhập tài khoản quản lý</div>
-          <div class="empty-state__desc">Vui lòng đăng nhập để xem và chỉnh sửa cài đặt.</div>
-          <button class="btn btn-primary" id="btn-settings-login" style="margin-top:16px;justify-content:center">Đăng nhập</button>
-        </div>
-      </section>
 
       <section class="settings-card" id="settings-form-card" style="display:none">
         <div class="settings-card__header">
@@ -184,7 +176,6 @@
   }
   function renderSettings() {
     const logged = window._isLoggedIn?.();
-    document.getElementById('settings-auth-gate').style.display = logged ? 'none' : 'block';
     document.getElementById('settings-form-card').style.display = logged ? 'block' : 'none';
     if (!logged || !_S) return;
 

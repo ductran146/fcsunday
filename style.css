@@ -478,9 +478,9 @@ table.fc-table {
 .fc-table tr:hover td.sticky-col { background: var(--bg-hover); }
 
 /* Thu-tháng cell states */
-.cell-paid    { background: rgba(46,204,113,.1);  color: var(--color-success); border-radius: var(--radius-sm); text-align:center; font-weight:600; }
-.cell-unpaid  { background: rgba(224,57,44,.1);   color: var(--color-accent-light); border-radius: var(--radius-sm); text-align:center; }
-.cell-exempt  { background: rgba(255,192,46,.08); color: var(--text-muted); border-radius: var(--radius-sm); text-align:center; font-style:italic; }
+.cell-paid    { background: #1E6B3E; color: #6EE4A0; border-radius: var(--radius-sm); text-align:center; font-weight:700; }
+.cell-unpaid  { background: #6B1E1A; color: #F4948E; border-radius: var(--radius-sm); text-align:center; font-weight:600; }
+.cell-exempt  { background: #4A3C10; color: #D4A830; border-radius: var(--radius-sm); text-align:center; font-style:italic; }
 .cell-future  { opacity: .35; pointer-events: none; text-align:center; }
 
 /* ── Form inputs ── */
@@ -1703,18 +1703,20 @@ body[data-active="thu-thang"] .cell-future-btn {
 }
 
 body[data-active="thu-thang"] .cell-future-btn.cell-unpaid-btn {
-  color: var(--text-muted);
-  background: rgba(255,255,255,.035);
+  color: var(--text-disabled);
+  background: rgba(255,255,255,.04);
 }
 
 body[data-active="thu-thang"] .cell-future-btn.cell-paid-btn {
-  color: var(--color-success);
-  background: rgba(46,204,113,.10);
+  background: #1E6B3E;
+  color: #6EE4A0;
+  opacity: .45;
 }
 
 body[data-active="thu-thang"] .cell-future-btn.cell-exempt-btn {
-  color: var(--color-primary);
-  background: rgba(255,192,46,.08);
+  background: #4A3C10;
+  color: #D4A830;
+  opacity: .45;
 }
 
 .thu-thang-toast {
@@ -2707,12 +2709,12 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
    ════════════════════════════════════════ */
 [data-theme="light"] {
   /* Surface / Background */
-  --bg-base:       #F2F1EE;
-  --bg-surface:    #FFFFFF;
-  --bg-elevated:   #F7F6F3;
-  --bg-border:     #E2E0DB;
-  --bg-stroke:     #CCCAC4;
-  --bg-hover:      #ECEAE6;
+  --bg-base:       #F0EFEC;
+  --bg-surface:    #F8F7F5;
+  --bg-elevated:   #FFFFFF;
+  --bg-border:     #E0DED9;
+  --bg-stroke:     #CCCAC5;
+  --bg-hover:      #E8E7E3;
 
   /* Text */
   --text-primary:   #181612;
@@ -2722,6 +2724,13 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
 
   /* Amount */
   --color-amount:   #2A2824;
+
+  /* Màu trên nền sáng: vàng → đen, đỏ → đậm hơn */
+  --color-primary:       #181612;   /* vàng → đen */
+  --color-primary-end:   #181612;
+  --color-warning:       #181612;
+  --color-accent-light:  #C0281C;   /* đỏ nhạt → đỏ đậm */
+  --color-danger:        #C0281C;
 
   /* Shadow — nhẹ hơn trên nền sáng */
   --shadow-sm:  0 2px 8px rgba(0,0,0,.08);
@@ -2774,9 +2783,47 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
 }
 
 [data-theme="light"] .save-bar:not([hidden]) {
-  background: rgba(242,241,238,.8);
+  background: rgba(248,247,245,.85);
   border-top: 1px solid var(--bg-border);
   box-shadow: 0 -4px 20px rgba(0,0,0,.08);
+}
+
+
+/* Light mode: cell icons solid */
+[data-theme="light"] .cell-paid   { background: #1A7A42; color: #FFFFFF; }
+[data-theme="light"] .cell-unpaid { background: #B8251F; color: #FFFFFF; }
+[data-theme="light"] .cell-exempt { background: #8A6A10; color: #FFFFFF; }
+
+[data-theme="light"] body[data-active="thu-thang"] .cell-future-btn.cell-paid-btn   { background: #1A7A42; color: #FFFFFF; opacity: .35; }
+[data-theme="light"] body[data-active="thu-thang"] .cell-future-btn.cell-exempt-btn { background: #8A6A10; color: #FFFFFF; opacity: .35; }
+[data-theme="light"] body[data-active="thu-thang"] .cell-future-btn.cell-unpaid-btn { background: rgba(0,0,0,.06); color: var(--text-disabled); }
+
+/* Light mode: button vàng → đen, text trắng */
+[data-theme="light"] .btn-primary,
+[data-theme="light"] .btn-gold,
+[data-theme="light"] .save-bar__btn--save {
+  background: #181612 !important;
+  color: #FFFFFF !important;
+}
+[data-theme="light"] .btn-primary:hover,
+[data-theme="light"] .btn-gold:hover,
+[data-theme="light"] .save-bar__btn--save:hover {
+  background: #2e2b28 !important;
+  opacity: 1;
+}
+
+/* Light mode: text vàng → đen */
+[data-theme="light"] .text-gold,
+[data-theme="light"] .kpi-card--gold .kpi-card__value,
+[data-theme="light"] .hero-fund__balance,
+[data-theme="light"] .fund-value {
+  color: #181612;
+}
+
+/* Light mode: text đỏ nhạt → đỏ đậm */
+[data-theme="light"] .text-red,
+[data-theme="light"] .kpi-card--red .kpi-card__value {
+  color: #C0281C;
 }
 
 [data-theme="light"] .btn-surface {
