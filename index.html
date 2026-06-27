@@ -524,12 +524,12 @@
       </tr>`;
     }).join('');
 
-    // Update nav badges
+    // Update nav badges — ẩn hết khi đang ở Tổng quan
     window.updateNavBadges?.({
-      thuThang: members.length,
-      thuPhat:  matches.length,
-      chiTieu:  chiTieu.length,
-      thanhVien: activeM.length
+      thuThang: 0,
+      thuPhat:  0,
+      chiTieu:  0,
+      thanhVien: 0
     });
   }
 
