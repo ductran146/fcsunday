@@ -2755,12 +2755,12 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
   /* Amount */
   --color-amount:   #2A2824;
 
-  /* Màu trên nền sáng: vàng → đen, đỏ → đậm hơn */
-  --color-primary:       #181612;   /* vàng → đen */
-  --color-primary-end:   #181612;
-  --color-warning:       #181612;
-  --color-accent-light:  #C0281C;   /* đỏ nhạt → đỏ đậm */
-  --color-danger:        #C0281C;
+  /* Màu trên nền sáng */
+  --color-primary:       #FFC02E;   /* giữ gold như darkmode */
+  --color-primary-end:   #F5891F;
+  --color-warning:       #FFC02E;
+  --color-accent-light:  #DD3636;   /* đỏ gốc light mode */
+  --color-danger:        #C22E2E;   /* đỏ đậm hơn 1 bậc */
 
   /* Shadow — nhẹ hơn trên nền sáng */
   --shadow-sm:  0 2px 8px rgba(0,0,0,.08);
@@ -2828,25 +2828,24 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
 
 /* Light mode: cell icons solid */
 [data-theme="light"] .cell-paid   { background: #1A7A42; color: #FFFFFF; }
-[data-theme="light"] .cell-unpaid { background: #B8251F; color: #FFFFFF; }
+[data-theme="light"] .cell-unpaid { background: #DD3636; color: #FFFFFF; }
 [data-theme="light"] .cell-exempt { background: #8A6A10; color: #FFFFFF; }
 
 [data-theme="light"] body[data-active="thu-thang"] .cell-future-btn.cell-paid-btn   { background: #1A7A42; color: #FFFFFF; opacity: .35; }
 [data-theme="light"] body[data-active="thu-thang"] .cell-future-btn.cell-exempt-btn { background: #8A6A10; color: #FFFFFF; opacity: .35; }
 [data-theme="light"] body[data-active="thu-thang"] .cell-future-btn.cell-unpaid-btn { background: rgba(0,0,0,.06); color: var(--text-disabled); }
 
-/* Light mode: button vàng → đen, text trắng */
+/* Light mode: button gold — giống darkmode */
 [data-theme="light"] .btn-primary,
 [data-theme="light"] .btn-gold,
 [data-theme="light"] .save-bar__btn--save {
-  background: #181612 !important;
-  color: #FFFFFF !important;
+  background: linear-gradient(135deg, #FFC02E, #F5891F) !important;
+  color: #1A1206 !important;
 }
 [data-theme="light"] .btn-primary:hover,
 [data-theme="light"] .btn-gold:hover,
 [data-theme="light"] .save-bar__btn--save:hover {
-  background: #2e2b28 !important;
-  opacity: 1;
+  opacity: .9 !important;
 }
 
 /* Light mode: text vàng → đen */
@@ -2860,7 +2859,7 @@ body[data-active="thanh-vien"] .member-sort-chip:active {
 /* Light mode: text đỏ nhạt → đỏ đậm */
 [data-theme="light"] .text-red,
 [data-theme="light"] .kpi-card--red .kpi-card__value {
-  color: #C0281C;
+  color: #DD3636;
 }
 
 [data-theme="light"] .btn-surface {

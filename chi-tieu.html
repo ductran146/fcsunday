@@ -43,7 +43,7 @@
     }
     .chi-card__stt {
       width: 24px; height: 24px; border-radius: var(--radius-full);
-      background: var(--bg-stroke); color: var(--text-muted);
+      background: var(--bg-base); color: var(--text-muted);
       font-size: 11px; font-weight: 700;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
@@ -292,7 +292,12 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
       type: 'doughnut',
       data: {
         labels,
-        datasets: [{ data, backgroundColor: labels.map(l => CAT_COLORS[CATS.indexOf(l)] || '#5D5D66'), borderWidth: 2, borderColor: 'var(--bg-surface)', borderRadius: 6, spacing: 2 }]
+        datasets: [{ data, backgroundColor: labels.map(l => CAT_COLORS[CATS.indexOf(l)] || '#5D5D66'),
+          borderWidth: 0,
+          borderRadius: 4,
+          spacing: 3,
+          hoverOffset: 4
+        }]
       },
       options: {
         cutout: '70%',
