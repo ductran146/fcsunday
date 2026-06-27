@@ -62,8 +62,8 @@
   --bg-base:       #0C0C0F;   /* Base 900 */
   --bg-surface:    #141418;   /* Surface 800 */
   --bg-elevated:   #18181D;   /* Surface 700 */
-  --bg-border:     #23232B;   /* Border / 600 */
-  --bg-stroke:     #2F2F38;   /* Stroke 500 */
+  --bg-border:     #32323C;   /* Border / 600 — nâng 1 bậc */
+  --bg-stroke:     #42424E;   /* Stroke 500 — nâng 1 bậc */
   --bg-hover:      #1f1f25;
 
   /* Semantic */
