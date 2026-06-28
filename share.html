@@ -61,6 +61,22 @@
       </div>
     </div>
 
+    <!-- Bảng công nợ thành viên -->
+    <div class="card" id="debt-section" style="margin-bottom:16px;padding:0;overflow:hidden;background:var(--bg-surface)">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">💀</span>
+          <span class="section-overline" style="color:var(--color-accent)">Trạng thái thành viên</span>
+        </div>
+        <span class="section-overline" id="debt-month-label" style="color:var(--text-muted)"></span>
+      </div>
+      <div id="debt-grid" style="
+        display:grid;
+        grid-template-columns:repeat(4,1fr);
+        border-top:1px solid var(--bg-border);
+      "></div>
+    </div>
+
     <!-- Back link -->
     <div style="text-align:center">
       <a href="index.html" style="font-size:13px;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px">
@@ -113,6 +129,53 @@
     document.getElementById('share-no-thang').textContent = fmt(noThang);
     document.getElementById('share-no-bia').textContent   = fmt(noBia);
     document.getElementById('share-date').textContent = 'Cập nhật ' + new Date().toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+    // Bảng công nợ thành viên
+    renderDebtGrid(S, members, matches);
+  }
+
+  function renderDebtGrid(S, members, matches) {
+    const curMonthIdx = new Date().getMonth();
+    const monthNames = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+    document.getElementById('debt-month-label').textContent = monthNames[curMonthIdx] + ' tháng';
+
+    // Tính nợ từng member
+    const debtMap = {};
+    members.forEach(m => {
+      let debt = 0;
+      // Nợ quỹ tháng: tháng chưa đóng (v=0) từ đầu năm đến tháng hiện tại
+      const arr = S.thuThang?.[String(m.id)] || Array(12).fill(0);
+      arr.forEach((v, mi) => { if (v === 0 && mi <= curMonthIdx) debt += FEE; });
+      // Nợ quỹ bia: trận thua chưa trả
+      matches.forEach(match => {
+        (match.losers||[]).forEach(l => { if (l.memberId == m.id && !l.paid) debt += FINE; });
+      });
+      debtMap[m.id] = debt;
+    });
+
+    // Sort: nợ nhiều nhất lên đầu, đủ xuống cuối
+    const sorted = [...members].sort((a, b) => (debtMap[b.id]||0) - (debtMap[a.id]||0));
+
+    const grid = document.getElementById('debt-grid');
+    grid.innerHTML = sorted.map((m, i) => {
+      const debt = debtMap[m.id] || 0;
+      const isOk = debt === 0;
+      const borderRight = (i % 4 !== 3) ? '1px solid var(--bg-border)' : 'none';
+      const rowIdx = Math.floor(i / 4);
+      const borderBottom = '1px solid var(--bg-border)';
+      return \`<div style="
+        padding:14px 8px 12px;
+        text-align:center;
+        border-right:\${borderRight};
+        border-bottom:\${borderBottom};
+      ">
+        <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\${m.name}</div>
+        \${isOk
+          ? '<div style="font-size:12px;font-weight:600;color:var(--color-success)">Đủ ✓</div>'
+          : \`<div style="font-size:12px;font-weight:700;color:var(--color-primary)">-\${fmt(debt)}đ</div>\`
+        }
+      </div>\`;
+    }).join('');
   }
 
   // Direct Firebase fetch (public read)
