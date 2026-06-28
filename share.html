@@ -200,32 +200,43 @@
         const auth = firebase.auth(app);
         const db   = firebase.database(app);
 
+        function showStatus(msg) {
+          document.getElementById('share-date').textContent = msg;
+        }
+
         function doRead() {
+          showStatus('Đang đọc database…');
           db.ref('/').once('value')
             .then(snap => {
               const S = snap.val();
+              console.log('Firebase data:', S ? 'OK' : 'null', typeof S);
               if (S) {
                 render(S);
                 localStorage.setItem('fc2026', JSON.stringify(S));
               } else {
-                document.getElementById('share-date').textContent = 'Không có dữ liệu';
+                showStatus('⚠️ Firebase trả về null');
               }
             })
             .catch(err => {
-              console.error('DB read error:', err.code, err.message);
-              document.getElementById('share-date').textContent = 'Lỗi: ' + err.code;
+              console.error('DB read error:', err);
+              showStatus('❌ DB: ' + err.code + ' — ' + err.message);
             });
         }
 
         // Login ẩn danh nếu chưa có user
         if (auth.currentUser) {
+          showStatus('Auth OK, đọc data…');
           doRead();
         } else {
+          showStatus('Đang login ẩn danh…');
           auth.signInAnonymously()
-            .then(doRead)
+            .then(u => {
+              showStatus('Login OK: ' + u.user.uid.slice(0,8) + '…');
+              doRead();
+            })
             .catch(err => {
-              console.error('Auth error:', err.code, err.message);
-              // Thử đọc thẳng nếu auth thất bại (rules có thể là public)
+              console.error('Auth error:', err);
+              showStatus('⚠️ Auth thất bại (' + err.code + '), thử đọc thẳng…');
               doRead();
             });
         }
