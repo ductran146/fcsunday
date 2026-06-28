@@ -3,251 +3,175 @@
 <head>
   <meta charset="UTF-8">
   <script>
-    /* Theme: apply trước khi render để tránh flash */
     (function(){
       var t = localStorage.getItem('fc-sunday-theme');
       if (t === 'light') document.documentElement.setAttribute('data-theme','light');
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
   <meta name="theme-color" content="#0C0C0F">
-  <title>FC Sunday — Tổng quỹ nhanh</title>
+  <title>FC Sunday — Tổng quỹ</title>
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
 </head>
-<body style="background:var(--bg-base);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+<body data-active="share">
+<div class="app-shell">
+  <div data-component="sidebar"></div>
+  <div class="main-content">
+    <div data-component="header" data-title="Tổng quỹ"></div>
+    <main class="page" id="page-content" style="opacity:0;transition:opacity .2s">
 
-  <div style="max-width:440px;width:100%">
-    <!-- Header -->
-    <div style="text-align:center;margin-bottom:32px">
-      <img src="icon-192.png" alt="FC Sunday" style="width:64px;height:64px;object-fit:contain;margin-bottom:16px">
-      <h1 style="font-size:28px;font-weight:900;text-transform:uppercase;letter-spacing:-.02em">FC Sunday</h1>
-      <div style="font-size:13px;color:var(--text-muted);margin-top:4px" id="share-date">—</div>
-    </div>
-
-    <!-- Total fund hero -->
-    <div class="hero-fund" style="margin-bottom:16px;text-align:center">
-      <div class="hero-fund__label" style="text-align:center">Tổng quỹ hiện tại</div>
-      <div class="hero-fund__total" style="text-align:center;font-size:40px" id="share-total">0</div>
-    </div>
-
-    <!-- Split -->
-    <div class="fund-split" style="margin-bottom:16px">
-      <div class="fund-split__item">
-        <div class="fund-split__item-label">Quỹ tháng</div>
-        <div class="fund-split__item-value" id="share-thang" style="color:var(--color-primary)">0</div>
+      <!-- Header -->
+      <div style="text-align:center;margin-bottom:24px">
+        <img src="icon-192.png" alt="FC Sunday" style="width:56px;height:56px;object-fit:contain;margin-bottom:12px;border-radius:12px">
+        <h1 class="text-h1" style="text-transform:uppercase;letter-spacing:-.02em">FC Sunday</h1>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:4px" id="share-date">Đang tải…</div>
       </div>
-      <div class="fund-split__item">
-        <div class="fund-split__item-label">Quỹ bia</div>
-        <div class="fund-split__item-value" id="share-bia" style="color:var(--color-primary)">0</div>
+
+      <!-- Hero fund -->
+      <div class="hero-fund" style="margin-bottom:16px;text-align:center">
+        <div class="hero-fund__label" style="text-align:center">Tổng quỹ hiện tại</div>
+        <div class="hero-fund__total" style="text-align:center;font-size:40px" id="share-total">—</div>
       </div>
-    </div>
 
-
-    <!-- Bảng công nợ thành viên -->
-    <div class="card" id="debt-section" style="margin-bottom:16px;padding:0;overflow:hidden;background:var(--bg-surface)">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:18px">💀</span>
-          <span class="section-overline" style="color:var(--color-accent)">Trạng thái thành viên</span>
+      <!-- Fund split -->
+      <div class="fund-split" style="margin-bottom:24px">
+        <div class="fund-split__item">
+          <div class="fund-split__item-label">Quỹ tháng</div>
+          <div class="fund-split__item-value" id="share-thang">—</div>
         </div>
-        <span class="section-overline" id="debt-month-label" style="color:var(--text-muted)"></span>
+        <div class="fund-split__item">
+          <div class="fund-split__item-label">Quỹ bia</div>
+          <div class="fund-split__item-value" id="share-bia">—</div>
+        </div>
       </div>
-      <div id="debt-grid" style="
-        display:grid;
-        grid-template-columns:repeat(4,1fr);
-        border-top:1px solid var(--bg-border);
-      "></div>
-    </div>
 
-    <!-- Back link -->
-    <div style="text-align:center">
-      <a href="index.html" style="font-size:13px;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px">
-        <iconify-icon icon="solar:arrow-left-linear" style="font-size:16px"></iconify-icon>
-        Quay lại trang chính
-      </a>
-    </div>
+      <!-- Bảng trạng thái thành viên -->
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:18px">💀</span>
+            <span class="section-overline" style="color:var(--color-accent)">Trạng thái thành viên</span>
+          </div>
+          <span class="section-overline" id="debt-month-label" style="color:var(--text-muted)"></span>
+        </div>
+        <div id="debt-grid" style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--bg-border)">
+          <div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--text-muted);font-size:13px">Đang tải…</div>
+        </div>
+      </div>
+
+    </main>
   </div>
-
+  <div data-component="bottom-nav"></div>
+</div>
+<div data-component="login-modal"></div>
+<script src="app.js" defer></script>
+<script src="components/components-loader.js" defer></script>
 <script>
   const FEE = 200000, FINE = 50000, BASE_YEAR = 2026;
-  const YEAR = BASE_YEAR;
 
   function fmt(n) {
-    if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1).replace('.0','') + 'M';
-    return new Intl.NumberFormat('vi-VN').format(Math.round(n||0)) + '';
+    if (!n && n !== 0) return '—';
+    const abs = Math.abs(n);
+    if (abs >= 1e6) return (n/1e6).toFixed(1).replace('.0','') + 'M';
+    return new Intl.NumberFormat('vi-VN').format(Math.round(n)) + '';
   }
 
-  // Firebase lưu array thành object — cần convert
   function toArr(val) {
     if (!val) return [];
     if (Array.isArray(val)) return val.filter(Boolean);
     return Object.values(val).filter(Boolean);
   }
 
-  function render(S) {
-    const members = toArr(S.members).filter(m => m.status !== 'left');
-    const matches = toArr(S.matches).filter(m => !m.year || m.year === YEAR);
-    const chiTieu = toArr(S.chiTieu).filter(c => c.date?.startsWith(String(YEAR)));
-
+  function renderShare(S) {
     const now = new Date();
-    const curMonthIdx = now.getMonth(); // 0-based
-    let thuThang = 0, noThang = 0;
+    const curMonthIdx = now.getMonth();
+    const YEAR = BASE_YEAR;
+
+    const members = toArr(S.members).filter(m => m && m.status !== 'left');
+    const matches  = toArr(S.matches).filter(m => m && (!m.year || m.year === YEAR));
+    const chiTieu  = toArr(S.chiTieu).filter(c => c && c.date?.startsWith(String(YEAR)));
+
+    // Thu tháng
+    let thuThang = 0;
     members.forEach(m => {
       const arr = S.thuThang?.[String(m.id)] || Array(12).fill(0);
-      arr.forEach((v, mi) => {
-        if (v === 1) thuThang += FEE;
-        else if (v === 0 && mi <= curMonthIdx) noThang += FEE;
-      });
+      const a = Array.isArray(arr) ? arr : Object.values(arr);
+      a.forEach(v => { if (v === 1) thuThang += FEE; });
     });
 
-    let thuBia = 0, noBia = 0;
+    // Thu bia
+    let thuBia = 0;
     matches.forEach(match => {
-      toArr(match.losers).forEach(l => { if(l.paid) thuBia += FINE; else noBia += FINE; });
-      thuBia += (match.thuThem||0);
+      toArr(match.losers).forEach(l => { if (l.paid) thuBia += FINE; });
+      thuBia += (match.thuThem || 0);
     });
 
-    const chiThang = chiTieu.filter(c=>!c.fund||c.fund==='thang').reduce((s,c)=>s+(c.amount||0),0);
-    const chiBia   = chiTieu.filter(c=>c.fund==='bia').reduce((s,c)=>s+(c.amount||0),0);
+    // Chi
+    const chiThang = chiTieu.filter(c => !c.fund || c.fund === 'thang').reduce((s,c) => s + (c.amount||0), 0);
+    const chiBia   = chiTieu.filter(c => c.fund === 'bia').reduce((s,c) => s + (c.amount||0), 0);
 
     const tonThang = thuThang - chiThang;
-    const tonBia   = thuBia - chiBia;
+    const tonBia   = thuBia   - chiBia;
 
-    document.getElementById('share-total').innerHTML = fmt(tonThang+tonBia);
-    document.getElementById('share-thang').textContent = fmt(tonThang);
-    document.getElementById('share-bia').textContent   = fmt(tonBia);
-    document.getElementById('share-date').textContent = 'Cập nhật ' + new Date().toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    document.getElementById('share-total').textContent = fmt(tonThang + tonBia);
 
-    // Bảng công nợ thành viên
-    renderDebtGrid(S, members, matches);
-  }
+    const elThang = document.getElementById('share-thang');
+    elThang.textContent = fmt(tonThang);
+    elThang.style.color = tonThang >= 0 ? 'var(--color-success)' : 'var(--color-accent-light)';
 
-  function renderDebtGrid(S, members, matches) {
-    const curMonthIdx = new Date().getMonth();
+    const elBia = document.getElementById('share-bia');
+    elBia.textContent = fmt(tonBia);
+    elBia.style.color = tonBia >= 0 ? 'var(--color-success)' : 'var(--color-accent-light)';
+
+    document.getElementById('share-date').textContent =
+      'Cập nhật ' + now.toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+    // Debt grid
     const monthNames = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
     document.getElementById('debt-month-label').textContent = monthNames[curMonthIdx] + ' tháng';
 
-    // Tính nợ từng member
     const debtMap = {};
     members.forEach(m => {
       let debt = 0;
-      // Nợ quỹ tháng: tháng chưa đóng (v=0) từ đầu năm đến tháng hiện tại
       const arr = S.thuThang?.[String(m.id)] || Array(12).fill(0);
-      arr.forEach((v, mi) => { if (v === 0 && mi <= curMonthIdx) debt += FEE; });
-      // Nợ quỹ bia: trận thua chưa trả
+      const a = Array.isArray(arr) ? arr : Object.values(arr);
+      a.forEach((v, mi) => { if (v === 0 && mi <= curMonthIdx) debt += FEE; });
       matches.forEach(match => {
         toArr(match.losers).forEach(l => { if (l.memberId == m.id && !l.paid) debt += FINE; });
       });
       debtMap[m.id] = debt;
     });
 
-    // Sort: nợ nhiều nhất lên đầu, đủ xuống cuối
-    const sorted = [...members].sort((a, b) => (debtMap[b.id]||0) - (debtMap[a.id]||0));
+    const sorted = [...members].sort((a,b) => (debtMap[b.id]||0) - (debtMap[a.id]||0));
 
-    const grid = document.getElementById('debt-grid');
-    grid.innerHTML = sorted.map((m, i) => {
-      const debt = debtMap[m.id] || 0;
-      const isOk = debt === 0;
-      const borderRight = (i % 4 !== 3) ? '1px solid var(--bg-border)' : 'none';
-      const rowIdx = Math.floor(i / 4);
-      const borderBottom = '1px solid var(--bg-border)';
-      return \`<div style="
-        padding:14px 8px 12px;
-        text-align:center;
-        border-right:\${borderRight};
-        border-bottom:\${borderBottom};
-      ">
-        <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\${m.name}</div>
-        \${isOk
-          ? '<div style="font-size:12px;font-weight:600;color:var(--color-success)">Đủ ✓</div>'
-          : \`<div style="font-size:12px;font-weight:700;color:var(--color-primary)">-\${fmt(debt)}đ</div>\`
-        }
-      </div>\`;
-    }).join('');
+    document.getElementById('debt-grid').innerHTML = sorted.length === 0
+      ? '<div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--text-muted);font-size:13px">Chưa có dữ liệu</div>'
+      : sorted.map((m, i) => {
+          const debt = debtMap[m.id] || 0;
+          const br = (i % 4 !== 3) ? '1px solid var(--bg-border)' : 'none';
+          return `<div style="padding:12px 6px;text-align:center;border-right:${br};border-bottom:1px solid var(--bg-border)">
+            <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</div>
+            ${debt === 0
+              ? '<div style="font-size:11px;font-weight:600;color:var(--color-success)">Đủ ✓</div>'
+              : `<div style="font-size:11px;font-weight:700;color:var(--color-accent-light)">-${fmt(debt)}đ</div>`
+            }
+          </div>`;
+        }).join('');
   }
 
-  const FIREBASE_CONFIG = {
-    apiKey:            "AIzaSyBi2JPD56s_vrUkEj-BovpnFWlz9MBNwj8",
-    authDomain:        "fc-sunday-8f932.firebaseapp.com",
-    databaseURL:       "https://fc-sunday-8f932-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId:         "fc-sunday-8f932",
-    storageBucket:     "fc-sunday-8f932.firebasestorage.app",
-    messagingSenderId: "801708335980",
-    appId:             "1:801708335980:web:7d60e25e440d414c674949",
+  window.onComponentsReady = function() {
+    document.getElementById('page-content').style.opacity = '1';
   };
 
-  function loadData() {
-    document.getElementById('share-date').textContent = 'Đang tải dữ liệu…';
-
-    // Render cache trước nếu có
-    const cached = localStorage.getItem('fc2026');
-    if (cached) {
-      try { render(JSON.parse(cached)); } catch(e) {}
-    }
-
-    function tryInit() {
-      if (!window.firebase) { setTimeout(tryInit, 100); return; }
-      try {
-        const app = firebase.apps.length
-          ? firebase.apps[0]
-          : firebase.initializeApp(FIREBASE_CONFIG);
-        const auth = firebase.auth(app);
-        const db   = firebase.database(app);
-
-        function showStatus(msg) {
-          document.getElementById('share-date').textContent = msg;
-        }
-
-        function doRead() {
-          showStatus('Đang đọc database…');
-          db.ref('/').once('value')
-            .then(snap => {
-              const S = snap.val();
-              console.log('Firebase data:', S ? 'OK' : 'null', typeof S);
-              if (S) {
-                render(S);
-                localStorage.setItem('fc2026', JSON.stringify(S));
-              } else {
-                showStatus('⚠️ Firebase trả về null');
-              }
-            })
-            .catch(err => {
-              console.error('DB read error:', err);
-              showStatus('❌ DB: ' + err.code + ' — ' + err.message);
-            });
-        }
-
-        // Login ẩn danh nếu chưa có user
-        if (auth.currentUser) {
-          showStatus('Auth OK, đọc data…');
-          doRead();
-        } else {
-          showStatus('Đang login ẩn danh…');
-          auth.signInAnonymously()
-            .then(u => {
-              showStatus('Login OK: ' + u.user.uid.slice(0,8) + '…');
-              doRead();
-            })
-            .catch(err => {
-              console.error('Auth error:', err);
-              showStatus('⚠️ Auth thất bại (' + err.code + '), thử đọc thẳng…');
-              doRead();
-            });
-        }
-      } catch(e) {
-        console.error('Firebase init error:', e);
-        if (!cached) document.getElementById('share-date').textContent = 'Lỗi khởi tạo Firebase';
-      }
-    }
-    tryInit();
-  }
-  loadData();
+  // Nhận data từ app.js khi Firebase load xong
+  window._onDataReady = function(S) {
+    renderShare(S);
+  };
 </script>
 <script>
   if ('serviceWorker' in navigator) {
