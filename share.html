@@ -84,10 +84,17 @@
     return new Intl.NumberFormat('vi-VN').format(Math.round(n||0)) + '';
   }
 
+  // Firebase lưu array thành object — cần convert
+  function toArr(val) {
+    if (!val) return [];
+    if (Array.isArray(val)) return val.filter(Boolean);
+    return Object.values(val).filter(Boolean);
+  }
+
   function render(S) {
-    const members = (S.members||[]).filter(m => m.status !== 'left');
-    const matches = (S.matches||[]).filter(m => !m.year || m.year === YEAR);
-    const chiTieu = (S.chiTieu||[]).filter(c => c.date?.startsWith(String(YEAR)));
+    const members = toArr(S.members).filter(m => m.status !== 'left');
+    const matches = toArr(S.matches).filter(m => !m.year || m.year === YEAR);
+    const chiTieu = toArr(S.chiTieu).filter(c => c.date?.startsWith(String(YEAR)));
 
     const now = new Date();
     const curMonthIdx = now.getMonth(); // 0-based
@@ -102,7 +109,7 @@
 
     let thuBia = 0, noBia = 0;
     matches.forEach(match => {
-      (match.losers||[]).forEach(l => { if(l.paid) thuBia += FINE; else noBia += FINE; });
+      toArr(match.losers).forEach(l => { if(l.paid) thuBia += FINE; else noBia += FINE; });
       thuBia += (match.thuThem||0);
     });
 
@@ -135,7 +142,7 @@
       arr.forEach((v, mi) => { if (v === 0 && mi <= curMonthIdx) debt += FEE; });
       // Nợ quỹ bia: trận thua chưa trả
       matches.forEach(match => {
-        (match.losers||[]).forEach(l => { if (l.memberId == m.id && !l.paid) debt += FINE; });
+        toArr(match.losers).forEach(l => { if (l.memberId == m.id && !l.paid) debt += FINE; });
       });
       debtMap[m.id] = debt;
     });
