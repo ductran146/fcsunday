@@ -48,18 +48,6 @@
       </div>
     </div>
 
-    <!-- Debt notice -->
-    <div class="card" style="margin-bottom:16px">
-      <div class="section-overline" style="margin-bottom:8px">Tổng nợ chưa thu</div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="color:var(--text-secondary);font-size:14px">Nợ quỹ bia</span>
-        <span style="font-weight:700;color:var(--color-accent-light)" id="share-no-bia">0</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-        <span style="color:var(--text-secondary);font-size:14px">Nợ quỹ tháng</span>
-        <span style="font-weight:700;color:var(--color-accent-light)" id="share-no-thang">0</span>
-      </div>
-    </div>
 
     <!-- Bảng công nợ thành viên -->
     <div class="card" id="debt-section" style="margin-bottom:16px;padding:0;overflow:hidden;background:var(--bg-surface)">
@@ -126,8 +114,6 @@
     document.getElementById('share-total').innerHTML = fmt(tonThang+tonBia);
     document.getElementById('share-thang').textContent = fmt(tonThang);
     document.getElementById('share-bia').textContent   = fmt(tonBia);
-    document.getElementById('share-no-thang').textContent = fmt(noThang);
-    document.getElementById('share-no-bia').textContent   = fmt(noBia);
     document.getElementById('share-date').textContent = 'Cập nhật ' + new Date().toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
     // Bảng công nợ thành viên
@@ -182,6 +168,7 @@
   const FIREBASE_URL = 'https://fc-sunday-8f932-default-rtdb.asia-southeast1.firebasedatabase.app';
 
   async function loadData() {
+    document.getElementById('share-date').textContent = 'Đang tải dữ liệu…';
     try {
       const cached = localStorage.getItem('fc2026');
       if (cached) render(JSON.parse(cached));
@@ -189,10 +176,16 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const S = await res.json();
       if (S) { render(S); localStorage.setItem('fc2026', JSON.stringify(S)); }
+      else document.getElementById('share-date').textContent = 'Không có dữ liệu';
     } catch(e) {
+      console.error('Load error:', e);
       const cached = localStorage.getItem('fc2026');
-      if (cached) render(JSON.parse(cached));
-      else document.getElementById('share-date').textContent = 'Không thể tải dữ liệu';
+      if (cached) {
+        render(JSON.parse(cached));
+        document.getElementById('share-date').textContent += ' (cache)';
+      } else {
+        document.getElementById('share-date').textContent = 'Lỗi: ' + e.message;
+      }
     }
   }
   loadData();
