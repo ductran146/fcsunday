@@ -17,8 +17,8 @@
   <title>FC Sunday — Tổng quỹ nhanh</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body style="background:var(--bg-base);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
 
@@ -164,29 +164,53 @@
     }).join('');
   }
 
-  // Direct Firebase fetch (public read)
-  const FIREBASE_URL = 'https://fc-sunday-8f932-default-rtdb.asia-southeast1.firebasedatabase.app';
+  const FIREBASE_CONFIG = {
+    apiKey:            "AIzaSyBi2JPD56s_vrUkEj-BovpnFWlz9MBNwj8",
+    authDomain:        "fc-sunday-8f932.firebaseapp.com",
+    databaseURL:       "https://fc-sunday-8f932-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId:         "fc-sunday-8f932",
+    storageBucket:     "fc-sunday-8f932.firebasestorage.app",
+    messagingSenderId: "801708335980",
+    appId:             "1:801708335980:web:7d60e25e440d414c674949",
+  };
 
-  async function loadData() {
+  function loadData() {
     document.getElementById('share-date').textContent = 'Đang tải dữ liệu…';
-    try {
-      const cached = localStorage.getItem('fc2026');
-      if (cached) render(JSON.parse(cached));
-      const res = await fetch(`${FIREBASE_URL}/.json?t=${Date.now()}`);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const S = await res.json();
-      if (S) { render(S); localStorage.setItem('fc2026', JSON.stringify(S)); }
-      else document.getElementById('share-date').textContent = 'Không có dữ liệu';
-    } catch(e) {
-      console.error('Load error:', e);
-      const cached = localStorage.getItem('fc2026');
-      if (cached) {
-        render(JSON.parse(cached));
-        document.getElementById('share-date').textContent += ' (cache)';
-      } else {
-        document.getElementById('share-date').textContent = 'Lỗi: ' + e.message;
+
+    // Render cache trước nếu có
+    const cached = localStorage.getItem('fc2026');
+    if (cached) {
+      try { render(JSON.parse(cached)); } catch(e) {}
+    }
+
+    // Chờ Firebase SDK load xong
+    function tryInit() {
+      if (!window.firebase) { setTimeout(tryInit, 100); return; }
+      try {
+        const app = firebase.apps.length
+          ? firebase.apps[0]
+          : firebase.initializeApp(FIREBASE_CONFIG);
+        const db = firebase.database(app);
+        db.ref('/').once('value')
+          .then(snap => {
+            const S = snap.val();
+            if (S) {
+              render(S);
+              localStorage.setItem('fc2026', JSON.stringify(S));
+            } else {
+              document.getElementById('share-date').textContent = 'Không có dữ liệu';
+            }
+          })
+          .catch(err => {
+            console.error('Firebase read error:', err);
+            if (!cached) document.getElementById('share-date').textContent = 'Lỗi tải dữ liệu';
+          });
+      } catch(e) {
+        console.error('Firebase init error:', e);
+        if (!cached) document.getElementById('share-date').textContent = 'Lỗi khởi tạo Firebase';
       }
     }
+    tryInit();
   }
   loadData();
 </script>
