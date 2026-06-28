@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body style="background:var(--bg-base);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
@@ -183,28 +184,44 @@
       try { render(JSON.parse(cached)); } catch(e) {}
     }
 
-    // Chờ Firebase SDK load xong
     function tryInit() {
       if (!window.firebase) { setTimeout(tryInit, 100); return; }
       try {
         const app = firebase.apps.length
           ? firebase.apps[0]
           : firebase.initializeApp(FIREBASE_CONFIG);
-        const db = firebase.database(app);
-        db.ref('/').once('value')
-          .then(snap => {
-            const S = snap.val();
-            if (S) {
-              render(S);
-              localStorage.setItem('fc2026', JSON.stringify(S));
-            } else {
-              document.getElementById('share-date').textContent = 'Không có dữ liệu';
-            }
-          })
-          .catch(err => {
-            console.error('Firebase read error:', err);
-            if (!cached) document.getElementById('share-date').textContent = 'Lỗi tải dữ liệu';
-          });
+        const auth = firebase.auth(app);
+        const db   = firebase.database(app);
+
+        function doRead() {
+          db.ref('/').once('value')
+            .then(snap => {
+              const S = snap.val();
+              if (S) {
+                render(S);
+                localStorage.setItem('fc2026', JSON.stringify(S));
+              } else {
+                document.getElementById('share-date').textContent = 'Không có dữ liệu';
+              }
+            })
+            .catch(err => {
+              console.error('DB read error:', err.code, err.message);
+              document.getElementById('share-date').textContent = 'Lỗi: ' + err.code;
+            });
+        }
+
+        // Login ẩn danh nếu chưa có user
+        if (auth.currentUser) {
+          doRead();
+        } else {
+          auth.signInAnonymously()
+            .then(doRead)
+            .catch(err => {
+              console.error('Auth error:', err.code, err.message);
+              // Thử đọc thẳng nếu auth thất bại (rules có thể là public)
+              doRead();
+            });
+        }
       } catch(e) {
         console.error('Firebase init error:', e);
         if (!cached) document.getElementById('share-date').textContent = 'Lỗi khởi tạo Firebase';
