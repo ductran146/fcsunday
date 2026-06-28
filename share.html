@@ -26,10 +26,14 @@
     <main class="page" id="page-content" style="opacity:0;transition:opacity .2s">
 
       <!-- Header -->
-      <div style="text-align:center;margin-bottom:24px">
-        <img src="icon-192.png" alt="FC Sunday" style="width:56px;height:56px;object-fit:contain;margin-bottom:12px;border-radius:12px">
-        <h1 class="text-h1" style="text-transform:uppercase;letter-spacing:-.02em">FC Sunday</h1>
-        <div style="font-size:13px;color:var(--text-muted);margin-top:4px" id="share-date">Đang tải…</div>
+      <div style="margin-bottom:24px;display:flex;justify-content:center">
+        <div style="display:flex;align-items:center;gap:10px">
+          <img src="icon-192.png" alt="FC Sunday" style="width:52px;height:52px;object-fit:contain;border-radius:10px;flex-shrink:0">
+          <div>
+            <h1 class="text-h1" style="text-transform:uppercase;letter-spacing:-.02em;margin:0;line-height:1.1">FC Sunday</h1>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:3px" id="share-date">Đang tải…</div>
+          </div>
+        </div>
       </div>
 
       <!-- Hero fund -->
@@ -38,21 +42,21 @@
         <div class="hero-fund__total" style="text-align:center;font-size:40px" id="share-total">—</div>
       </div>
 
-      <!-- Fund split -->
-      <div class="fund-split" style="margin-bottom:24px">
-        <div class="fund-split__item">
-          <div class="fund-split__item-label">Quỹ tháng</div>
-          <div class="fund-split__item-value" id="share-thang">—</div>
+      <!-- KPI nợ -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+        <div class="kpi-card kpi-card--red">
+          <div class="kpi-card__label">Nợ quỹ tháng</div>
+          <div class="kpi-card__value" id="share-thang">—</div>
         </div>
-        <div class="fund-split__item">
-          <div class="fund-split__item-label">Quỹ bia</div>
-          <div class="fund-split__item-value" id="share-bia">—</div>
+        <div class="kpi-card kpi-card--red">
+          <div class="kpi-card__label">Nợ quỹ bia</div>
+          <div class="kpi-card__value" id="share-bia">—</div>
         </div>
       </div>
 
       <!-- Bảng trạng thái thành viên -->
-      <div class="card" style="padding:0;overflow:hidden;margin-bottom:24px">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px">
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 12px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:18px">💀</span>
             <span class="section-overline" style="color:var(--color-accent)">Trạng thái thành viên</span>
@@ -76,9 +80,7 @@
 
   function fmt(n) {
     if (!n && n !== 0) return '—';
-    const abs = Math.abs(n);
-    if (abs >= 1e6) return (n/1e6).toFixed(1).replace('.0','') + 'M';
-    return new Intl.NumberFormat('vi-VN').format(Math.round(n)) + '';
+    return new Intl.NumberFormat('vi-VN').format(Math.round(n));
   }
 
   function toArr(val) {
@@ -120,13 +122,22 @@
 
     document.getElementById('share-total').textContent = fmt(tonThang + tonBia);
 
-    const elThang = document.getElementById('share-thang');
-    elThang.textContent = fmt(tonThang);
-    elThang.style.color = tonThang >= 0 ? 'var(--color-success)' : 'var(--color-accent-light)';
+    // Tính nợ quỹ tháng
+    let noThang = 0;
+    members.forEach(m => {
+      const arr = S.thuThang?.[String(m.id)] || Array(12).fill(0);
+      const a = Array.isArray(arr) ? arr : Object.values(arr);
+      a.forEach((v, mi) => { if (v === 0 && mi <= curMonthIdx) noThang += FEE; });
+    });
 
-    const elBia = document.getElementById('share-bia');
-    elBia.textContent = fmt(tonBia);
-    elBia.style.color = tonBia >= 0 ? 'var(--color-success)' : 'var(--color-accent-light)';
+    // Tính nợ quỹ bia
+    let noBia = 0;
+    matches.forEach(match => {
+      toArr(match.losers).forEach(l => { if (!l.paid) noBia += FINE; });
+    });
+
+    document.getElementById('share-thang').textContent = noThang > 0 ? fmt(noThang) : '0';
+    document.getElementById('share-bia').textContent   = noBia   > 0 ? fmt(noBia)   : '0';
 
     document.getElementById('share-date').textContent =
       'Cập nhật ' + now.toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -154,7 +165,7 @@
       : sorted.map((m, i) => {
           const debt = debtMap[m.id] || 0;
           const br = (i % 4 !== 3) ? '1px solid var(--bg-border)' : 'none';
-          return `<div style="padding:12px 6px;text-align:center;border-right:${br};border-bottom:1px solid var(--bg-border)">
+          return `<div style="padding:6px 6px;text-align:center;border-right:${br};border-bottom:1px solid var(--bg-border)">
             <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</div>
             ${debt === 0
               ? '<div style="font-size:11px;font-weight:600;color:var(--color-success)">Đủ ✓</div>'

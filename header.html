@@ -11,33 +11,27 @@
   <!-- Spacer đẩy actions sang phải -->
   <div style="flex:1"></div>
 
-  <!-- Actions -->
+  <!-- Actions: chart - setting - login/avatar -->
   <div class="topbar-actions">
-    <!-- Quick view -->
-    <a href="share.html" target="_blank" class="btn btn-icon btn-ghost" title="Xem tổng quỹ nhanh">
-      <iconify-icon icon="solar:eye-linear" style="font-size:22px"></iconify-icon>
+    <!-- Dashboard / chart -->
+    <a href="share.html" class="btn btn-icon btn-ghost" title="Xem tổng quỹ nhanh">
+      <iconify-icon icon="solar:chart-2-linear" style="font-size:22px"></iconify-icon>
     </a>
 
-    <!-- Theme toggle -->
-    <button class="btn-theme-toggle" id="btn-theme-toggle" title="Chuyển giao diện" aria-label="Chuyển giao diện sáng/tối">
-      <iconify-icon id="theme-toggle-icon" icon="solar:sun-linear" style="font-size:20px"></iconify-icon>
-    </button>
+    <!-- Setting: luôn hiện -->
+    <a href="settings.html" class="btn btn-icon btn-ghost" id="btn-setting" title="Cài đặt">
+      <iconify-icon icon="solar:settings-linear" style="font-size:22px"></iconify-icon>
+    </a>
 
     <!-- PWA Install (chỉ hiện mobile web, ẩn khi đã cài) -->
     <button class="btn btn-icon btn-ghost" id="btn-pwa-install" title="Cài đặt ứng dụng" style="display:none">
       <iconify-icon icon="solar:download-minimalistic-linear" style="font-size:22px"></iconify-icon>
     </button>
 
-    <!-- Chưa login -->
-    <button class="btn btn-outline btn-sm" id="btn-login" style="display:inline-flex;gap:6px;align-items:center">
-      <iconify-icon icon="solar:login-2-linear" style="font-size:16px"></iconify-icon>
-      Đăng nhập
+    <!-- Chưa login: icon login -->
+    <button class="btn btn-icon btn-ghost" id="btn-login" title="Đăng nhập">
+      <iconify-icon icon="solar:login-2-linear" style="font-size:22px"></iconify-icon>
     </button>
-
-    <!-- Đã login: Setting -->
-    <a href="settings.html" class="btn btn-icon btn-ghost auth-only" id="btn-setting" title="Cài đặt" style="display:none">
-      <iconify-icon icon="solar:settings-linear" style="font-size:22px"></iconify-icon>
-    </a>
 
     <!-- Đã login: Avatar -->
     <button class="topbar-avatar auth-only" id="btn-avatar" title="Đăng xuất" style="display:none">Đ</button>
