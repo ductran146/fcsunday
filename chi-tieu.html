@@ -171,7 +171,7 @@
               <div class="section-overline" style="margin-bottom:4px">Lịch sử</div>
               <div class="section-title" style="font-size:16px">Tất cả khoản chi</div>
             </div>
-            <select class="input input-h40" id="filter-fund" style="width:auto;padding-right:36px;min-width:120px">
+            <select class="input input-h40" id="filter-fund" style="width:auto;min-width:120px">
               <option value="">Tất cả quỹ</option>
               <option value="thang">Quỹ tháng</option>
               <option value="bia">Quỹ bia</option>
@@ -375,7 +375,7 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
       const amtLabel = (c.amount < 0 ? '+' : '-') + fmt(Math.abs(c.amount));
       const fundBadge = c.fund === 'bia'
         ? '<span class="badge badge-warning">Quỹ bia</span>'
-        : '<span class="badge badge-neutral">Quỹ tháng</span>';
+        : '<span class="badge badge-success">Quỹ tháng</span>';
       return `<div class="chi-swipe-row" data-cid="${c.id}">
         ${isAdmin ? `<div class="chi-swipe-actions">
           <button class="chi-action-btn chi-swipe-edit" onclick="editChiTieu(${c.id})" title="Sửa">
