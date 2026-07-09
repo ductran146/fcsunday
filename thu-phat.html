@@ -75,14 +75,14 @@
       flex-shrink: 0;
     }
     .month-accordion-card.is-open .month-accordion-chevron { transform: rotate(180deg); }
-    .month-accordion-body { display: none; padding: 16px 20px; display:flex; flex-direction:column; gap:16px; }
+    .month-accordion-body { display: none; padding: 16px 0 0; display:flex; flex-direction:column; gap:0px; }
     .month-accordion-card:not(.is-open) .month-accordion-body { display: none; }
 
     /* Month summary chips */
-    .month-summary-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+    .month-summary-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 20px 16px; }
     .month-chip {
       display: inline-flex; align-items: center; gap: 4px;
-      padding: 5px 12px; border-radius: var(--radius-full);
+      padding: 4px 8px; border-radius: var(--radius-full);
       font-size: 12px; font-weight: 700;
       background: var(--bg-elevated); color: var(--text-secondary);
       border: 1px solid var(--bg-border);
@@ -92,7 +92,7 @@
     .month-chip--debt  { background: rgba(255,192,46,.1); color: var(--color-primary); border-color: rgba(255,192,46,.25); }
 
     /* Match item */
-    .match-item { background: var(--bg-elevated); border-radius: var(--radius-lg); padding: 14px 16px; border: 1px solid var(--bg-border); }
+    .match-item { background: var(--bg-surface); padding: 12px 20px; border-top: 10px solid var(--bg-hover); }
     .match-item__header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
     .match-item__num {
       width: 32px; height: 32px; border-radius: var(--radius-sm);
@@ -270,6 +270,7 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
   let _editMatchId = null;
 
   function fmt(n) { return new Intl.NumberFormat('vi-VN').format(n); }
+  function fmtK(n) { return n === 0 ? '0' : (n / 1000).toLocaleString('vi-VN', {maximumFractionDigits: 0}) + ' K'; }
   function fmtDate(d) { if(!d) return '—'; const p=d.split('-'); return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d; }
   function getYearMatches(S) {
     return (S.matches||[]).filter(m=>_year===BASE_YEAR?(!m.year||m.year===BASE_YEAR):m.year===_year);
@@ -449,9 +450,9 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
 
       const summaryChips=monthMatches.length?`<div class="month-summary-chips">
         <span class="month-chip">${monthMatches.length} trận</span>
-        <span class="month-chip month-chip--total">Σ: ${fmt(tongMo)}</span>
-        ${thuThemMo?`<span class="month-chip month-chip--extra">Thêm: +${fmt(thuThemMo)}</span>`:''}
-        ${noBiaMo?`<span class="month-chip month-chip--debt">Nợ: ${fmt(noBiaMo)}</span>`:''}
+        <span class="month-chip month-chip--total">Σ: ${fmtK(tongMo)}</span>
+        ${thuThemMo?`<span class="month-chip month-chip--extra">Thêm: +${fmtK(thuThemMo)}</span>`:''}
+        ${noBiaMo?`<span class="month-chip month-chip--debt">Nợ: ${fmtK(noBiaMo)}</span>`:''}
       </div>`:'';
 
       const matchesHTML=monthMatches.map(match=>{
@@ -465,7 +466,7 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
         const paidCount=(match.losers||[]).filter(l=>l.paid).length;
         const biaMo=paidCount*FINE;
         const noBiaTran=(match.losers||[]).filter(l=>!l.paid).length*FINE;
-        const extraHTML=match.thuThem?`<div class="match-item__extra">🎁 Thu thêm: +${fmt(match.thuThem)}${match.ghiChuThem?` — ${match.ghiChuThem}`:''}</div>`:'';
+        const extraHTML=match.thuThem?`<div class="match-item__extra">🎁 Thu thêm: +${fmtK(match.thuThem)}${match.ghiChuThem?` — ${match.ghiChuThem}`:''}</div>`:'';
         const adminBtns=isAdmin?`<div style="display:flex;gap:4px;margin-left:auto">
           <button class="btn btn-icon btn-ghost" onclick="openEditMatch(${match.id})" title="Sửa" style="color:var(--color-primary);width:36px;height:36px"><iconify-icon icon="solar:pen-2-linear" style="font-size:16px"></iconify-icon></button>
           <button class="btn btn-icon btn-ghost" onclick="deleteMatch(${match.id})" title="Xoá" style="color:var(--text-muted);width:36px;height:36px"><iconify-icon icon="solar:trash-bin-trash-linear" style="font-size:16px"></iconify-icon></button>
@@ -478,13 +479,15 @@ window.DatePicker=(function(){'use strict';const MV=['Tháng 1','Tháng 2','Thá
           </div>
           <div class="match-item__losers">${losersHTML}</div>
           ${extraHTML}
-          <div class="match-item__summary">Quỹ bia: ${fmt(biaMo)}${noBiaTran?` · <span style="color:var(--color-primary)">Nợ: ${fmt(noBiaTran)}</span>`:''}${match.thuThem?` · Thu thêm: +${fmt(match.thuThem)}`:''}</div>
+          <div class="match-item__summary">Quỹ bia: ${fmtK(biaMo)}${noBiaTran?` · <span style="color:var(--color-primary)">Nợ: ${fmtK(noBiaTran)}</span>`:''}${match.thuThem?` · Thu thêm: +${fmtK(match.thuThem)}`:''}</div>
         </div>`;
       }).join('');
 
-      const addBtn=isAdmin?`<button class="btn btn-outline w-full" onclick="openAddMatch(${mi})" style="justify-content:center;">
-        <iconify-icon icon="solar:add-circle-linear" style="font-size:18px"></iconify-icon>Thêm trận ${MONTHS_FULL[mi]}
-      </button>`:'';
+      const addBtn=isAdmin?`<div style="padding: 20px 20px 20px;">
+        <button class="btn btn-outline w-full" onclick="openAddMatch(${mi})" style="justify-content:center;">
+          <iconify-icon icon="solar:add-circle-linear" style="font-size:18px"></iconify-icon>Thêm trận ${MONTHS_FULL[mi]}
+        </button>
+      </div>`:'';
 
       const card=document.createElement('div');
       card.className=`month-accordion-card${isOpen?' is-open':''}`;

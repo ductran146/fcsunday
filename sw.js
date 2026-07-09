@@ -1,7 +1,7 @@
 // FC Sunday V2 — Service Worker
 // Đủ điều kiện PWA install, cache shell assets để load nhanh
 
-const CACHE_NAME = 'fc-sunday-v2-v2';
+const CACHE_NAME = 'fc-sunday-v2-v6';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -30,7 +30,7 @@ self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL_ASSETS))
   );
-  self.skipWaiting();
+  self.skipWaiting(); // kích hoạt SW mới ngay, không chờ tab đóng
 });
 
 // Activate: xoá cache cũ
@@ -41,6 +41,10 @@ self.addEventListener('activate', (e) => {
     )
   );
   self.clients.claim();
+  // Thông báo tất cả tab đang mở để reload
+  self.clients.matchAll({ type: 'window' }).then(clients => {
+    clients.forEach(client => client.postMessage({ type: 'SW_UPDATED' }));
+  });
 });
 
 // Fetch: Network first → fallback cache

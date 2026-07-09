@@ -311,6 +311,9 @@
     // Load all components in parallel
     await Promise.all(Array.from(placeholders).map(loadComponent));
 
+    // Hiện app ngay sau khi HTML components đã inject vào DOM
+    document.body.classList.add('components-ready');
+
     // After injection — initialize behaviors
     // Không đổi title header — luôn hiện "FC Sunday"
 

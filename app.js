@@ -306,51 +306,66 @@
   window._getTheme = getTheme;
 })();
 
+// ── SW Update: tự reload khi có version mới ──────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data?.type === 'SW_UPDATED') {
+      // Lưu flag để popup không hiện lại sau reload
+      localStorage.setItem('fc-sunday-sw-reloading', '1');
+      // Hiện toast nhỏ rồi reload
+      const toast = document.createElement('div');
+      toast.style.cssText = [
+        'position:fixed;bottom:90px;left:50%;transform:translateX(-50%)',
+        'background:var(--bg-elevated)',
+        'border:1px solid var(--bg-stroke)',
+        'border-radius:var(--radius-lg)',
+        'padding:10px 20px',
+        'font-size:13px;font-weight:600',
+        'color:var(--text-primary)',
+        'z-index:9999',
+        'box-shadow:0 4px 20px rgba(0,0,0,.4)',
+        'white-space:nowrap',
+      ].join(';');
+      toast.textContent = '✨ Đang cập nhật phiên bản mới…';
+      document.body.appendChild(toast);
+      setTimeout(() => window.location.reload(), 1500);
+    }
+  });
+}
+
 // ── Pull-to-refresh ────────────────────────────────────────
 (function initPullToRefresh() {
-  const THRESHOLD  = 72;   // px kéo xuống để trigger
-  const MAX_PULL   = 100;  // px tối đa hiệu ứng
-  let startY = 0, pulling = false, triggered = false;
+  const THRESHOLD = 80;
+  let startY = 0, currentY = 0, pulling = false, triggered = false;
 
-  // Tạo indicator DOM
   const indicator = document.createElement('div');
   indicator.id = 'ptr-indicator';
-  indicator.innerHTML = `
-    <div class="ptr-inner">
-      <svg class="ptr-spinner" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-          stroke-dasharray="28.27" stroke-dashoffset="28.27"/>
-      </svg>
-    </div>`;
+  indicator.innerHTML = `<div class="ptr-inner"><svg class="ptr-spinner" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="28.27" stroke-dashoffset="28.27"/></svg></div>`;
   document.body.prepend(indicator);
 
-  const page = () => document.querySelector('.main-content') || document.body;
-
-  function setProgress(ratio) {
-    const deg = ratio * 360;
-    const offset = 28.27 * (1 - Math.min(ratio, 1));
-    const circle = indicator.querySelector('circle');
-    if (circle) {
-      circle.style.strokeDashoffset = offset;
-      circle.style.transform = `rotate(${deg * 2}deg)`;
-      circle.style.transformOrigin = '12px 12px';
-    }
-    indicator.style.setProperty('--ptr-progress', Math.min(ratio, 1));
-    const translateY = Math.min(ratio * THRESHOLD, MAX_PULL);
-    indicator.style.transform = `translateX(-50%) translateY(${translateY - 48}px)`;
-    indicator.style.opacity = Math.min(ratio * 2, 1);
+  function getScrollTop() {
+    // Kiểm tra cả window lẫn .main-content
+    const el = document.querySelector('.main-content');
+    return Math.max(window.scrollY || 0, window.pageYOffset || 0, el ? el.scrollTop : 0, document.documentElement.scrollTop || 0);
   }
 
-  function trigger() {
-    triggered = true;
-    indicator.classList.add('ptr-loading');
-    // Spin animation
+  function isAtTop() {
+    return getScrollTop() <= 2;
+  }
+
+  function updateIndicator(dy) {
+    const ratio = Math.min(dy / THRESHOLD, 1);
+    const translateY = Math.min(dy * 0.5, 56) - 48;
     const circle = indicator.querySelector('circle');
-    if (circle) circle.style.strokeDashoffset = '8';
-    // Gọi refresh
-    Promise.resolve(window._refreshData?.()).finally(() => {
-      setTimeout(reset, 400);
-    });
+    if (circle) {
+      circle.style.strokeDashoffset = 28.27 * (1 - ratio);
+      circle.style.transform = `rotate(${ratio * 720}deg)`;
+      circle.style.transformOrigin = '12px 12px';
+    }
+    indicator.style.transform = `translateX(-50%) translateY(${translateY}px)`;
+    indicator.style.opacity = Math.min(ratio * 1.5, 1);
+    if (ratio >= 1) indicator.classList.add('ptr-triggered');
+    else indicator.classList.remove('ptr-triggered');
   }
 
   function reset() {
@@ -359,46 +374,57 @@
     indicator.classList.remove('ptr-loading', 'ptr-triggered');
     indicator.style.transform = 'translateX(-50%) translateY(-48px)';
     indicator.style.opacity = '0';
-    page().style.transform = '';
-    page().style.transition = 'transform .25s ease';
-    setTimeout(() => { page().style.transition = ''; }, 260);
   }
 
+  function trigger() {
+    triggered = true;
+    indicator.classList.add('ptr-loading');
+    const circle = indicator.querySelector('circle');
+    if (circle) circle.style.strokeDashoffset = '8';
+    Promise.resolve(window._refreshData?.()).finally(() => {
+      setTimeout(reset, 600);
+    });
+  }
+
+  // Non-passive touchstart để có thể prevent default
   document.addEventListener('touchstart', e => {
-    // Chỉ kéo khi đang ở top của trang, không có modal đang mở
-    const scrollTop = page().scrollTop || window.scrollY;
-    if (scrollTop > 2) return;
+    if (!isAtTop()) return;
     if (document.querySelector('.modal-backdrop[style*="flex"], .sheet-backdrop[style*="flex"]')) return;
+    if (triggered) return;
     startY = e.touches[0].clientY;
-    pulling = true;
+    currentY = startY;
+    pulling = false;
     triggered = false;
   }, { passive: true });
 
   document.addEventListener('touchmove', e => {
-    if (!pulling || triggered) return;
-    const dy = e.touches[0].clientY - startY;
-    if (dy <= 0) { pulling = false; return; }
-    // Damping: kéo càng xa càng chậm
-    const pull = Math.pow(dy, 0.75);
-    const ratio = pull / THRESHOLD;
-    setProgress(ratio);
-    // Đẩy content xuống theo
-    const shift = Math.min(pull * 0.4, 32);
-    page().style.transform = `translateY(${shift}px)`;
-    page().style.transition = 'none';
-    if (ratio >= 1 && !indicator.classList.contains('ptr-triggered')) {
-      indicator.classList.add('ptr-triggered');
+    if (triggered) return;
+    currentY = e.touches[0].clientY;
+    const dy = currentY - startY;
+
+    if (dy > 5 && isAtTop() && !pulling) {
+      pulling = true;
     }
+
+    if (!pulling) return;
+    if (dy <= 0) { pulling = false; reset(); return; }
+
+    updateIndicator(dy);
   }, { passive: true });
 
   document.addEventListener('touchend', () => {
-    if (!pulling) return;
-    const isTriggered = indicator.classList.contains('ptr-triggered');
-    if (isTriggered) {
+    if (!pulling || triggered) return;
+    if (indicator.classList.contains('ptr-triggered')) {
       trigger();
     } else {
       reset();
     }
+    pulling = false;
+  });
+
+  document.addEventListener('touchcancel', () => {
+    if (!triggered) reset();
+    pulling = false;
   });
 })();
 
@@ -464,5 +490,282 @@
     document.addEventListener('DOMContentLoaded', startObserving);
   } else {
     startObserving();
+  }
+})();
+
+// ── Nhắc đóng quỹ tháng ───────────────────────────────────
+(function initFundReminder() {
+  // Tính thứ 5 cuối cùng và thứ 6 đầu tiên của tháng hiện tại
+  function getLastThursday(year, month) {
+    // month: 0-based
+    const lastDay = new Date(year, month + 1, 0); // ngày cuối tháng
+    const d = lastDay.getDay(); // 0=CN, 4=T5
+    const offset = (d >= 4) ? (d - 4) : (d + 3);
+    return new Date(year, month, lastDay.getDate() - offset);
+  }
+
+  function getFirstFriday(year, month) {
+    // Thứ 6 đầu tiên của tháng TIẾP THEO
+    const nextMonth = month === 11 ? 0 : month + 1;
+    const nextYear  = month === 11 ? year + 1 : year;
+    const first = new Date(nextYear, nextMonth, 1);
+    const d = first.getDay(); // 0=CN, 5=T6
+    const offset = (d <= 5) ? (5 - d) : (7 - d + 5);
+    return new Date(nextYear, nextMonth, 1 + offset);
+  }
+
+  function shouldShow() {
+    const now   = new Date();
+    const year  = now.getFullYear();
+    const month = now.getMonth();
+
+    const thu5  = getLastThursday(year, month);
+    const fri1  = getFirstFriday(year, month);
+
+    // Cửa sổ: từ 00:00 thứ 5 cuối đến hết 23:59 thứ 6 đầu tháng sau
+    const start = new Date(thu5.getFullYear(), thu5.getMonth(), thu5.getDate(), 0, 0, 0);
+    const end   = new Date(fri1.getFullYear(), fri1.getMonth(), fri1.getDate(), 23, 59, 59);
+
+    return now >= start && now <= end;
+  }
+
+  function getPhase() {
+    const now   = new Date();
+    const year  = now.getFullYear();
+    const month = now.getMonth();
+    // Ngày 1 của tháng tiếp theo
+    const nextMonth = month === 11 ? 0 : month + 1;
+    const nextYear  = month === 11 ? year + 1 : year;
+    const firstOfNext = new Date(nextYear, nextMonth, 1, 0, 0, 0);
+    // Trước ngày 1 tháng sau → "sắp đến", từ ngày 1 trở đi → "đã đến"
+    return now < firstOfNext ? 'soon' : 'due';
+  }
+
+  function getStorageKey() {
+    const now = new Date();
+    // Key theo ngày — chỉ hiện 1 lần/ngày
+    return `fc-sunday-fund-reminder-${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+  }
+
+  function dismiss() {
+    localStorage.setItem(getStorageKey(), '1');
+    const el = document.getElementById('_fund_reminder');
+    if (el) el.remove();
+    window._unlockScroll?.();
+  }
+
+  function show() {
+    if (document.getElementById('_fund_reminder')) return;
+    window._lockScroll?.();
+
+    const phase = getPhase();
+    const icon  = phase === 'soon' ? '💰' : '🚨';
+    const title = phase === 'soon' ? 'Sắp đến kỳ đóng quỹ!' : 'Đã đến kỳ đóng quỹ!';
+    const desc  = phase === 'soon'
+      ? 'Sắp đến tháng đóng quỹ rồi anh em ơi! Chuẩn bị đạn dược 💵 để đóng quỹ dần. Ai chưa đóng thì liên hệ Cường Buồn 📲 để không bị réo tên trước toàn đội! 😅'
+      : 'Đã đến kỳ đóng quỹ rồi anh em! Mang đạn dược 💵 đóng cho Cường Buồn ngay. Đạn dược chưa đủ thì nhớ note lại 📝 để Cường biết mà chờ! 🙏';
+
+    const el = document.createElement('div');
+    el.id = '_fund_reminder';
+    el.style.cssText = [
+      'position:fixed;inset:0;z-index:9999',
+      'display:flex;align-items:center;justify-content:center',
+      'background:rgba(0,0,0,.55)',
+      'backdrop-filter:blur(4px)',
+      '-webkit-backdrop-filter:blur(4px)',
+      'padding:20px',
+    ].join(';');
+
+    el.innerHTML = `
+      <div style="
+        background:var(--bg-surface);
+        border:1px solid var(--bg-border);
+        border-radius:var(--radius-xl);
+        padding:28px 24px 20px;
+        max-width:340px;
+        width:100%;
+        text-align:center;
+        box-shadow:0 16px 48px rgba(0,0,0,.45);
+        animation:_reminderPop .25s cubic-bezier(.34,1.56,.64,1) both;
+      ">
+        <div style="font-size:44px;margin-bottom:12px;line-height:1">${icon}</div>
+        <div style="font-size:17px;font-weight:800;color:var(--text-primary);margin-bottom:8px">${title}</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:24px">${desc}</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <a href="share.html" onclick="dismiss()" style="
+            display:flex;align-items:center;justify-content:center;gap:8px;
+            height:44px;border-radius:var(--radius-lg);
+            background:linear-gradient(135deg,#FFC02E,#F5891F);
+            color:#1A1206;font-weight:700;font-size:14px;
+            text-decoration:none;font-family:var(--font-sans);
+          ">
+            Xem công nợ
+          </a>
+          <button onclick="dismiss()" style="
+            height:40px;border-radius:var(--radius-lg);
+            border:1px solid var(--bg-stroke);
+            background:transparent;
+            color:var(--text-secondary);font-weight:600;font-size:13px;
+            cursor:pointer;font-family:var(--font-sans);
+          ">Đã biết, bỏ qua</button>
+        </div>
+      </div>
+      <style>
+        @keyframes _reminderPop {
+          from { opacity:0; transform:scale(.85); }
+          to   { opacity:1; transform:scale(1); }
+        }
+      </style>
+    `;
+
+    document.body.appendChild(el);
+    // Bấm ngoài để đóng
+    el.addEventListener('click', e => { if (e.target === el) dismiss(); });
+    window.dismiss = dismiss;
+  }
+
+  // Chạy sau khi DOM sẵn sàng
+  function init() {
+    if (!shouldShow()) return;
+    if (localStorage.getItem(getStorageKey())) return; // đã hiện hôm nay rồi
+    // Vừa reload do SW update → không hiện popup
+    if (localStorage.getItem('fc-sunday-sw-reloading')) {
+      localStorage.removeItem('fc-sunday-sw-reloading');
+      return;
+    }
+    if (window._isLoggedIn?.()) return; // đã login → không hiện
+    // Chờ auth resolve trước
+    setTimeout(() => {
+      if (window._isLoggedIn?.()) return;
+      show();
+    }, 1500);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+// ── Input Clear Button ─────────────────────────────────────
+(function initInputClear() {
+  const SKIP_TYPES = ['checkbox','radio','file','submit','button','reset','hidden','range','color'];
+
+  function addClearBtn(input) {
+    if (input.dataset.clearInited) return;
+    input.dataset.clearInited = '1';
+
+    // Tạo wrapper bao quanh input
+    const wrap = document.createElement('div');
+    wrap.className = '_input-clear-wrap';
+    wrap.style.cssText = 'position:relative;display:block;width:100%';
+    // Giữ nguyên display nếu input là inline
+    if (getComputedStyle(input).display === 'inline') {
+      wrap.style.display = 'inline-block';
+    }
+
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = '_input-clear-btn';
+    btn.setAttribute('tabindex', '-1');
+    btn.setAttribute('aria-label', 'Xóa');
+    btn.innerHTML = '<iconify-icon icon="solar:close-circle-bold" style="font-size:18px;display:block"></iconify-icon>';
+    btn.style.cssText = [
+      'position:absolute',
+      'right:8px',
+      'top:0',
+      'bottom:0',
+      'margin:auto',
+      'width:28px',
+      'height:28px',
+      'display:none',
+      'align-items:center',
+      'justify-content:center',
+      'padding:0',
+      'border:none',
+      'background:transparent',
+      'cursor:pointer',
+      'color:var(--text-muted)',
+      'z-index:5',
+      'border-radius:50%',
+      'flex-shrink:0',
+    ].join(';');
+    wrap.appendChild(btn);
+
+    // Padding phải để không bị chữ đè lên icon
+    const origPR = getComputedStyle(input).paddingRight;
+    const basePR = parseFloat(origPR) || 12;
+
+    function updateBtn() {
+      const hasVal = input.value.length > 0;
+      const isFocused = document.activeElement === input;
+      if (hasVal && isFocused) {
+        btn.style.display = 'flex';
+        input.style.paddingRight = `${basePR + 32}px`;
+      } else {
+        btn.style.display = 'none';
+        input.style.paddingRight = `${basePR}px`;
+      }
+    }
+
+    input.addEventListener('focus', updateBtn);
+    input.addEventListener('input', updateBtn);
+    input.addEventListener('blur', () => {
+      // Delay để click btn kịp xử lý trước khi ẩn
+      setTimeout(updateBtn, 150);
+    });
+
+    btn.addEventListener('mousedown', e => e.preventDefault()); // prevent blur
+    btn.addEventListener('click', () => {
+      input.value = '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      input.focus();
+      updateBtn();
+    });
+
+    updateBtn();
+  }
+
+  function initAll() {
+    document.querySelectorAll('input, textarea').forEach(el => {
+      if (SKIP_TYPES.includes(el.type)) return;
+      if (el.readOnly || el.disabled) return;
+      if (el.closest('._input-clear-btn')) return;
+      addClearBtn(el);
+    });
+  }
+
+  // Chạy sau DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll);
+  } else {
+    initAll();
+  }
+
+  // Re-run sau components ready (để catch input trong modals/sheets)
+  const orig = window.onComponentsReady;
+  const origAdded = window._clearBtnHooked;
+  if (!origAdded) {
+    window._clearBtnHooked = true;
+    const _origReady = window.onComponentsReady;
+    window.onComponentsReady = function(...args) {
+      if (_origReady) _origReady.apply(this, args);
+      setTimeout(initAll, 100);
+    };
+  }
+
+  // MutationObserver để catch input được thêm động (modal, sheet)
+  const obs = new MutationObserver(() => initAll());
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      obs.observe(document.body, { childList: true, subtree: true });
+    });
+  } else {
+    obs.observe(document.body, { childList: true, subtree: true });
   }
 })();

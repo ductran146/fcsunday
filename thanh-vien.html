@@ -64,7 +64,10 @@
 
       <!-- Search + add -->
       <div class="member-toolbar">
-        <input class="input member-search-input" id="member-search" type="search" placeholder="Tìm thành viên..." autocomplete="off">
+        <div style="position:relative;min-width:0">
+          <iconify-icon icon="solar:magnifer-linear" class="member-search-icon" style="display:inline-flex;align-items:center;justify-content:center;position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;font-size:16px;line-height:1;z-index:1;pointer-events:none"></iconify-icon>
+          <input class="input member-search-input" id="member-search" type="text" placeholder="Tìm thành viên..." autocomplete="off" style="padding-left:40px">
+        </div>
         <button class="btn btn-gold member-add-btn" id="btn-add-member" type="button">
           <iconify-icon icon="solar:add-circle-linear" class="member-add-btn__icon" aria-hidden="true"></iconify-icon>
           Thêm
@@ -111,7 +114,7 @@
       </div>
       <div class="field">
         <label>Số điện thoại</label>
-        <input type="tel" class="input" id="member-phone" placeholder="0901234567">
+        <input type="tel" class="input" id="member-phone" placeholder="Nhập số điện thoại">
       </div>
       <div class="field">
         <label>Trạng thái</label>
@@ -287,40 +290,108 @@
       return;
     }
 
-    el.innerHTML = show.map(m => {
-      const d = debtCache.get(m.id) || calcDebt(S, m);
-      const monthDebtClass = d.noThang > 0 ? 'is-debt' : 'is-clear';
-      const beerDebtClass = d.noBia > 0 ? 'is-debt' : 'is-clear';
-      const totalDebtClass = d.total > 0 ? 'is-debt' : 'is-clear';
+    const isDesktop = window.innerWidth >= 768;
 
-      return `<div class="member-swipe-row fade-in">
-        <div class="member-swipe-actions">
-          <button class="member-swipe-action member-swipe-action--edit" type="button" onclick="event.stopPropagation(); editMember(${m.id}); closeMemberSwipeRows();" title="Sửa thông tin" aria-label="Sửa thông tin">
-            <iconify-icon icon="solar:pen-2-linear"></iconify-icon>
-            <span class="member-swipe-action__text">Sửa thông tin</span>
-          </button>
-          <button class="member-swipe-action member-swipe-action--pay" type="button" onclick="event.stopPropagation(); payMember(${m.id});" title="Thanh toán" aria-label="Thanh toán">
-            <iconify-icon icon="solar:wallet-money-linear"></iconify-icon>
-            <span class="member-swipe-action__text">Thanh toán</span>
-          </button>
-        </div>
-        <div class="member-row member-detail-card member-swipe-card">
-          <div class="member-detail-card__top">
-            <div class="member-row__name">${m.name}</div>
-            <div class="member-detail-card__status">
-              ${STATUS_BADGE[m.status] || ''}
+    if (isDesktop) {
+      // Dạng bảng cho desktop/tablet
+      el.style.display = 'block';
+      // Width mỗi cột: khi có admin (2 button Sửa+Thanh toán) dùng px cố định,
+      // cột thao tác (min-width) hấp thụ phần dư. Khi không login (không có
+      // cột thao tác), đổi 7 cột còn lại sang % (giữ nguyên tỉ lệ tương đối)
+      // để dàn đều lấp hết bề rộng bảng, không bị trống bên phải.
+      const W = (px, pct) => isAdmin ? `${px}px` : `${pct}%`;
+      function thSort(key, label, align, px, pct) {
+        const active = _sortKey === key;
+        const icon = active ? (_sortDir === 'asc' ? 'solar:arrow-up-linear' : 'solar:arrow-down-linear') : 'solar:sort-vertical-linear';
+        const cls = active ? 'sortable sort-active' : 'sortable';
+        return `<th class="${cls}" style="text-align:${align};width:${W(px,pct)}" onclick="setMemberSort('${key}')">${label} <iconify-icon class="th-sort-icon" icon="${icon}"></iconify-icon></th>`;
+      }
+      el.innerHTML = `
+        <div class="table-wrap">
+          <table class="fc-table member-table">
+            <thead>
+              <tr>
+                <th style="text-align:left;width:${W(48,7)}">STT</th>
+                ${thSort('name','Thành viên','left',145,20)}
+                <th style="text-align:left;width:${W(110,15)}">Trạng thái</th>
+                ${thSort('soTran','Thua','center',60,8)}
+                ${thSort('noThang','Nợ tháng','right',120,17)}
+                ${thSort('noBia','Nợ bia','right',110,15)}
+                ${thSort('total','Tổng nợ','right',120,18)}
+                ${isAdmin ? '<th style="min-width:190px"></th>' : ''}
+              </tr>
+            </thead>
+            <tbody>
+              ${show.map((m, i) => {
+                const d = debtCache.get(m.id) || calcDebt(S, m);
+                const noThangColor = d.noThang > 0 ? 'color:var(--color-accent-light)' : 'color:var(--color-success)';
+                const noBiaColor   = d.noBia   > 0 ? 'color:var(--color-accent-light)' : 'color:var(--color-success)';
+                const totalColor   = d.total   > 0 ? 'color:var(--color-accent-light)' : 'color:var(--color-success)';
+                return `<tr class="fade-in" style="cursor:default;height:40px">
+                  <td style="color:var(--text-muted);font-size:13px">${i + 1}</td>
+                  <td style="font-weight:700;color:var(--text-primary)">${m.name}</td>
+                  <td style="text-align:left">${STATUS_BADGE[m.status] || ''}</td>
+                  <td style="text-align:center;font-weight:600;color:var(--text-secondary)">${d.soTran}</td>
+                  <td style="text-align:right;font-weight:700;${noThangColor}">${d.noThang > 0 ? fmt(d.noThang) : '✓'}</td>
+                  <td style="text-align:right;font-weight:700;${noBiaColor}">${d.noBia > 0 ? fmt(d.noBia) : '✓'}</td>
+                  <td style="text-align:right;font-weight:700;${totalColor}">${d.total > 0 ? fmt(d.total) : '✓'}</td>
+                  ${isAdmin ? `
+                  <td style="text-align:right">
+                    <div style="display:flex;gap:4px;justify-content:flex-end;white-space:nowrap">
+                      <button class="btn btn-icon btn-ghost btn-h32" type="button" onclick="editMember(${m.id})" title="Sửa">
+                        <iconify-icon icon="solar:pen-2-linear" style="font-size:15px"></iconify-icon>
+                      </button>
+                      <button class="btn btn-success btn-h32" type="button" onclick="payMember(${m.id})" title="Thanh toán" style="white-space:nowrap">
+                        <iconify-icon icon="solar:wallet-money-linear" style="font-size:15px"></iconify-icon>
+                        <span>Thanh toán</span>
+                      </button>
+                    </div>
+                  </td>` : ''}
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    } else {
+      // Dạng card cho mobile
+      el.style.display = 'flex';
+      el.style.flexDirection = 'column';
+      el.style.gap = '8px';
+      el.innerHTML = show.map(m => {
+        const d = debtCache.get(m.id) || calcDebt(S, m);
+        const monthDebtClass = d.noThang > 0 ? 'is-debt' : 'is-clear';
+        const beerDebtClass = d.noBia > 0 ? 'is-debt' : 'is-clear';
+        const totalDebtClass = d.total > 0 ? 'is-debt' : 'is-clear';
+
+        return `<div class="member-swipe-row fade-in">
+          <div class="member-swipe-actions">
+            <button class="member-swipe-action member-swipe-action--edit" type="button" onclick="event.stopPropagation(); editMember(${m.id}); closeMemberSwipeRows();" title="Sửa thông tin" aria-label="Sửa thông tin">
+              <iconify-icon icon="solar:pen-2-linear"></iconify-icon>
+              <span class="member-swipe-action__text">Sửa thông tin</span>
+            </button>
+            <button class="member-swipe-action member-swipe-action--pay" type="button" onclick="event.stopPropagation(); payMember(${m.id});" title="Thanh toán" aria-label="Thanh toán">
+              <iconify-icon icon="solar:wallet-money-linear"></iconify-icon>
+              <span class="member-swipe-action__text">Thanh toán</span>
+            </button>
+          </div>
+          <div class="member-row member-detail-card member-swipe-card">
+            <div class="member-detail-card__top">
+              <div class="member-row__name">${m.name}</div>
+              <div class="member-detail-card__status">
+                ${STATUS_BADGE[m.status] || ''}
+              </div>
+            </div>
+            <div class="member-detail-card__meta-row">
+              <span class="member-debt-pill member-debt-pill--match">${d.soTran} thua</span>
+              <span class="member-debt-pill member-debt-pill--month ${monthDebtClass}">Tháng: ${moneyChip(d.noThang)}</span>
+              <span class="member-debt-pill member-debt-pill--beer ${beerDebtClass}">Bia: ${moneyChip(d.noBia)}</span>
+              <span class="member-debt-pill member-debt-pill--total ${totalDebtClass}">Σ: ${moneyChip(d.total)}</span>
             </div>
           </div>
-          <div class="member-detail-card__meta-row">
-            <span class="member-debt-pill member-debt-pill--match">${d.soTran} thua</span>
-            <span class="member-debt-pill member-debt-pill--month ${monthDebtClass}">Tháng: ${moneyChip(d.noThang)}</span>
-            <span class="member-debt-pill member-debt-pill--beer ${beerDebtClass}">Bia: ${moneyChip(d.noBia)}</span>
-            <span class="member-debt-pill member-debt-pill--total ${totalDebtClass}">Σ: ${moneyChip(d.total)}</span>
-          </div>
-        </div>
-      </div>`;
-    }).join('');
-    setupMemberSwipeActions();
+        </div>`;
+      }).join('');
+      setupMemberSwipeActions();
+    }
   }
 
   function closeMemberSwipeRows(exceptRow) {
